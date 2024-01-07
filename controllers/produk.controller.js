@@ -13,7 +13,7 @@ exports.getallProduct = async (request, response) => {
 	});
 };
 
-exports.addProduct = (request, response) => {
+exports.addProduct = async (request, response) => {
 	upload(request, response, async (error) => {
 		if (error) {
 			console.log(error);

@@ -11,7 +11,7 @@ app.get(
 	produkController.getallProduct
 );
 app.post(
-	"/",
+	"/add",
 	auth.authVerify,
 	checkRole(["seller", "admin"]),
 	produkController.addProduct
