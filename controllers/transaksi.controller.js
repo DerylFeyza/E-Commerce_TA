@@ -63,7 +63,7 @@ exports.productToCart = async (request, response) => {
 			}
 
 			await cartModel.update(
-				{ totalharga: hargatotal },
+				{ totalharga: totalharga },
 				{
 					where: { id_user: iduser, status: "draft" },
 				}
@@ -80,6 +80,37 @@ exports.productToCart = async (request, response) => {
 		return response.json({
 			success: false,
 			message: error.message,
+		});
+	}
+};
+
+exports.checkout = async (req, res) => {
+	try {
+		const iduser = req.userData.id_user;
+		console.log(iduser);
+		cartModel
+			.update(
+				{ status: "dibayar" },
+				{
+					where: { id_user: iduser, status: "draft" },
+				}
+			)
+			.then((result) => {
+				return res.json({
+					success: true,
+					message: "checkout berhasil",
+				});
+			})
+			.catch((error) => {
+				return res.json({
+					success: false,
+					message: error.message,
+				});
+			});
+	} catch (error) {
+		return res.status(401).json({
+			success: false,
+			message: `Unauthorized: ${error.message}`,
 		});
 	}
 };
