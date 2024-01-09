@@ -4,77 +4,82 @@ const cartDetailsModel = require("../models/index").keranjangitems;
 const Op = require("sequelize").Op;
 
 exports.productToCart = async (request, response) => {
-	let cartData = {
-		id_user: request.body.id_user,
-		// totalharga: request.body.totalharga,
-		status: "draft",
-	};
-	const iduser = cartData.id_user;
-	const checkExistingCart = await cartModel.findOne({
-		where: { id_user: iduser, status: "draft" },
-	});
-	if (checkExistingCart) {
-		const id_keranjang = checkExistingCart.id;
-		// cartModel
-		// 	.update(datapemesanan, { where: { id: idpemesanan } })
-		// 	.then((result) => {
-		cartDetailsModel.destroy({ where: { id_keranjang: id_keranjang } });
-		let detailsoforder = request.body.detailsoforder;
-		for (let i = 0; i < detailsoforder.length; i++) {
-			detailsoforder[i].id_keranjang = id_keranjang;
-		}
+	try {
+		let cartData = {
+			id_user: request.body.id_user,
+			status: "draft",
+		};
+		let totalharga = 0;
+		const iduser = cartData.id_user;
+		const checkExistingCart = await cartModel.findOne({
+			where: { id_user: iduser, status: "draft" },
+		});
 
-		cartDetailsModel
-			.bulkCreate(detailsoforder)
-			.then((result) => {
-				return response.json({
-					success: true,
-					message: "cart has been updated successfully",
+		if (checkExistingCart) {
+			const id_keranjang = checkExistingCart.id;
+			await cartDetailsModel.destroy({ where: { id_keranjang: id_keranjang } });
+
+			let detailsoforder = request.body.detailsoforder;
+			for (let i = 0; i < detailsoforder.length; i++) {
+				const productData = await produkModel.findOne({
+					where: { id: detailsoforder[i].id_produk },
 				});
-			})
-			.catch((error) => {
-				return response.json({
-					success: false,
-					message: error.message,
-				});
-			});
-		// })
-		// .catch((error) => {
-		// 	return response.json({
-		// 		success: false,
-		// 		message: error.message,
-		// 	});
-		// });
-	} else {
-		cartModel
-			.create(cartData)
-			.then((result) => {
-				let id_keranjang = result.id;
-				let detailsoforder = request.body.detailsoforder;
-				for (let i = 0; i < detailsoforder.length; i++) {
-					detailsoforder[i].id_keranjang = id_keranjang;
+
+				detailsoforder[i].total =
+					detailsoforder[i].quantity * productData.harga;
+
+				detailsoforder[i].id_keranjang = id_keranjang;
+				totalharga += detailsoforder[i].total;
+			}
+
+			await cartModel.update(
+				{ totalharga: totalharga },
+				{
+					where: { id_user: iduser, status: "draft" },
 				}
+			);
 
-				cartDetailsModel
-					.bulkCreate(detailsoforder)
-					.then((result) => {
-						return response.json({
-							success: true,
-							message: "new cart and product has been inserted to the cart",
-						});
-					})
-					.catch((error) => {
-						return response.json({
-							success: false,
-							message: error.message,
-						});
-					});
-			})
-			.catch((error) => {
-				return response.json({
-					success: false,
-					message: error.message,
-				});
+			await cartDetailsModel.bulkCreate(detailsoforder);
+
+			return response.json({
+				success: true,
+				message: "cart has been updated successfully",
 			});
+		} else {
+			const result = await cartModel.create(cartData);
+			let id_keranjang = result.id;
+			let detailsoforder = request.body.detailsoforder;
+
+			for (let i = 0; i < detailsoforder.length; i++) {
+				const productData = await produkModel.findOne({
+					where: { id: detailsoforder[i].id_produk },
+				});
+
+				detailsoforder[i].total =
+					detailsoforder[i].quantity * productData.harga;
+
+				detailsoforder[i].id_keranjang = id_keranjang;
+				totalharga += detailsoforder[i].total;
+			}
+
+			await cartModel.update(
+				{ totalharga: hargatotal },
+				{
+					where: { id_user: iduser, status: "draft" },
+				}
+			);
+
+			await cartDetailsModel.bulkCreate(detailsoforder);
+			return response.json({
+				message: iduser,
+				success: true,
+				message: "new cart and product have been inserted into the cart",
+			});
+		}
+	} catch (error) {
+		return response.json({
+			success: false,
+			message: error.message,
+		});
 	}
 };
