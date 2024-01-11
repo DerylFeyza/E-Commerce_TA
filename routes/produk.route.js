@@ -10,6 +10,7 @@ app.get(
 	checkRole(["admin"]),
 	produkController.getallProduct
 );
+app.post("/find", produkController.findProduct);
 app.post(
 	"/add",
 	auth.authVerify,

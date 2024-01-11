@@ -13,6 +13,24 @@ exports.getallProduct = async (request, response) => {
 	});
 };
 
+exports.findProduct = async (request, response) => {
+	let keyword = request.body.keyword;
+	let users = await userModel.findAll({
+		where: {
+			[Op.or]: [
+				{ nama_barang: { [Op.substring]: keyword } },
+				{ kategori: { [Op.substring]: keyword } },
+				{ harga: { [Op.substring]: keyword } },
+			],
+		},
+	});
+	return response.json({
+		success: true,
+		data: users,
+		message: "product with the sufficient filter has been shown",
+	});
+};
+
 exports.addProduct = async (request, response) => {
 	upload(request, response, async (error) => {
 		if (error) {
