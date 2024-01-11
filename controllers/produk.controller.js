@@ -15,7 +15,7 @@ exports.getallProduct = async (request, response) => {
 
 exports.findProduct = async (request, response) => {
 	let keyword = request.body.keyword;
-	let users = await userModel.findAll({
+	let product = await produkModel.findAll({
 		where: {
 			[Op.or]: [
 				{ nama_barang: { [Op.substring]: keyword } },
@@ -26,7 +26,7 @@ exports.findProduct = async (request, response) => {
 	});
 	return response.json({
 		success: true,
-		data: users,
+		data: product,
 		message: "product with the sufficient filter has been shown",
 	});
 };
