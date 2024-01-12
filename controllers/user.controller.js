@@ -124,6 +124,70 @@ exports.getAlluser = async (request, response) => {
 	});
 };
 
+exports.findUser = async (request, response) => {
+	let keyword = request.body.keyword;
+	let users = await userModel.findAll({
+		where: {
+			[Op.or]: [
+				{ username: { [Op.substring]: keyword } },
+				{ role: { [Op.substring]: keyword } },
+				{ email: { [Op.substring]: keyword } },
+				{ password: { [Op.substring]: keyword } },
+			],
+		},
+	});
+	return response.json({
+		success: true,
+		data: users,
+		message: "user found",
+	});
+};
+
+exports.updateUser = (request, response) => {
+	let datauser = {
+		username: request.body.username,
+		role: request.body.role,
+		email: request.body.email,
+	};
+	let iduser = request.params.id;
+	userModel
+		.update(datauser, { where: { id: iduser } })
+		.then((result) => {
+			return response.json({
+				success: true,
+				message: "User data has been succesfully updated",
+			});
+		})
+		.catch((error) => {
+			return response.json({
+				success: false,
+				message: error.message,
+			});
+		});
+};
+
+exports.userChangeDetails = (request, response) => {
+	let datauser = {
+		username: request.body.username,
+		email: request.body.email,
+	};
+	let iduser = request.userData.id_user;
+	userModel
+		.update(datauser, { where: { id: iduser } })
+		.then((result) => {
+			return response.json({
+				success: true,
+				message: "your data has been succesfully updated",
+			});
+		})
+		.catch((error) => {
+			return response.json({
+				success: false,
+				message: error.message,
+			});
+		});
+};
+
 exports.deleteUser = (request, response) => {
 	const id = request.params.id;
 	userModel

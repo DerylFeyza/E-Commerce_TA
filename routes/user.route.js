@@ -6,8 +6,20 @@ const { checkRole } = require("../middleware/checkRole");
 
 app.post("/login", userController.login);
 app.post("/register", userController.userRegister);
-
+app.put(
+	"/update/:id",
+	auth.authVerify,
+	checkRole(["admin"]),
+	userController.updateUser
+);
+app.put("/update", auth.authVerify, userController.userChangeDetails);
 app.post("/add", auth.authVerify, checkRole(["admin"]), userController.addUser);
+app.post(
+	"/find",
+	auth.authVerify,
+	checkRole(["admin"]),
+	userController.findUser
+);
 app.get("/", auth.authVerify, checkRole(["admin"]), userController.getAlluser);
 app.delete(
 	"/delete/:id",
@@ -15,23 +27,4 @@ app.delete(
 	checkRole(["admin"]),
 	userController.deleteUser
 );
-
-// app.post(
-// 	"/find",
-// 	auth.authVerify,
-// 	checkRole(["admin", "resepsionis"]),
-// 	userController.finduser
-// );
-// app.put(
-// 	"/:id",
-// 	auth.authVerify,
-// 	checkRole(["admin"]),
-// 	userController.updateuser
-// );
-// app.delete(
-// 	"/:id",
-// 	auth.authVerify,
-// 	checkRole(["admin"]),
-// 	userController.deleteUser
-// );
 module.exports = app;
