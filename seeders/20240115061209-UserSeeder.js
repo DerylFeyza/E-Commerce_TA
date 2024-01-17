@@ -8,8 +8,8 @@ module.exports = {
 		const data = [];
 		for (let i = 0; i < 30; i++) {
 			const randomDate = faker.date.between(
-				new Date(new Date().setFullYear(new Date().getFullYear() - 10)), // 10 years ago
-				new Date() // Today
+				new Date(new Date().setFullYear(new Date().getFullYear() - 10)),
+				new Date()
 			);
 			const randomEnumValue = faker.random.arrayElement(enumValues);
 			data.push({
@@ -18,7 +18,6 @@ module.exports = {
 				role: randomEnumValue,
 				password: md5(123),
 				createdAt: randomDate,
-				updatedAt: randomDate,
 			});
 		}
 
