@@ -10,9 +10,8 @@ exports.productToCart = async (request, response) => {
 			status: "draft",
 		};
 		let totalharga = 0;
-		const iduser = cartData.id_user;
 		const checkExistingCart = await cartModel.findOne({
-			where: { id_user: iduser, status: "draft" },
+			where: { id_user: cartData.id_user, status: "draft" },
 		});
 
 		if (checkExistingCart) {
@@ -35,7 +34,7 @@ exports.productToCart = async (request, response) => {
 			await cartModel.update(
 				{ totalharga: totalharga },
 				{
-					where: { id_user: iduser, status: "draft" },
+					where: { id_user: cartData.id_user, status: "draft" },
 				}
 			);
 
@@ -65,13 +64,13 @@ exports.productToCart = async (request, response) => {
 			await cartModel.update(
 				{ totalharga: totalharga },
 				{
-					where: { id_user: iduser, status: "draft" },
+					where: { id_user: cartData.id_user, status: "draft" },
 				}
 			);
 
 			await cartDetailsModel.bulkCreate(detailsoforder);
 			return response.json({
-				message: iduser,
+				message: cartData.id_user,
 				success: true,
 				message: "new cart and product have been inserted into the cart",
 			});

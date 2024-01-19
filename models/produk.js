@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
 	}
 	produk.init(
 		{
-			id_user: DataTypes.INTEGER,
+			id_publisher: DataTypes.INTEGER,
 			nama_barang: DataTypes.STRING,
 			gambar_barang: DataTypes.STRING,
 			kategori: DataTypes.STRING,
