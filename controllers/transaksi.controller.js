@@ -6,7 +6,7 @@ const Op = require("sequelize").Op;
 exports.productToCart = async (request, response) => {
 	try {
 		let cartData = {
-			id_user: request.body.id_user,
+			id_user: request.userData.id_user,
 			status: "draft",
 		};
 		let totalharga = 0;
