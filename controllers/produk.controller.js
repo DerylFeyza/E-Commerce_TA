@@ -42,6 +42,7 @@ exports.addProduct = async (request, response) => {
 		}
 
 		let newProduct = {
+			id_publisher: request.userData.id_user,
 			nama_barang: request.body.nama_barang,
 			gambar_barang: request.file.filename,
 			kategori: request.body.kategori,
@@ -74,6 +75,7 @@ exports.updateProduct = async (request, response) => {
 		}
 		let id = request.params.id;
 		let dataproduk = {
+			id_publisher: request.userData.id_user,
 			nama_barang: request.body.nama_barang,
 			gambar_barang: request.file.filename,
 			kategori: request.body.kategori,
