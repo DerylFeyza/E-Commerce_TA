@@ -133,3 +133,14 @@ exports.deleteProduct = async (request, response) => {
 			});
 		});
 };
+
+exports.getProductImage = (request, response) => {
+	const filename = request.params.filename;
+	const filePath = path.join(__dirname, "../fotoproduk", filename);
+	response.sendFile(filePath, (err) => {
+		if (err) {
+			console.error(err);
+			response.status(500).json({ error: "Server Error" });
+		}
+	});
+};
