@@ -1,6 +1,6 @@
 "use strict";
 const faker = require("faker");
-const md5 = require("md5");
+const bcrypt = require("bcrypt");
 /** @type {import('sequelize-cli').Migration} */
 const enumValues = ["customer", "seller", "admin"];
 module.exports = {
@@ -16,7 +16,7 @@ module.exports = {
 				username: faker.name.findName(),
 				email: faker.internet.email(),
 				role: randomEnumValue,
-				password: md5(123),
+				password: await bcrypt.hash("123", 10),
 				createdAt: randomDate,
 			});
 		}

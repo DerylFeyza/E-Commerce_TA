@@ -1,6 +1,6 @@
 const userModel = require("../models/index").user;
 const Op = require("sequelize").Op;
-const md5 = require("md5");
+const bcrypt = require("bcrypt");
 const jsonwebtoken = require("jsonwebtoken");
 const SECRET_KEY = "secretcode";
 
@@ -8,23 +8,37 @@ exports.login = async (request, response) => {
 	try {
 		const params = {
 			email: request.body.email,
-			password: md5(request.body.password),
+			password: request.body.password,
 		};
-		const findUser = await userModel.findOne({ where: params });
+
+		const findUser = await userModel.findOne({
+			where: { email: params.email },
+		});
+
 		if (findUser == null) {
 			return response.status(400).json({
 				message: "email or password doesnt match",
 			});
 		}
-		console.log(findUser);
+
+		const valid = await bcrypt.compare(params.password, findUser.password);
+		if (!valid) {
+			return response.status(400).json({
+				success: false,
+				message: "email or password doesnt match",
+			});
+		}
+
 		let tokenPayLoad = {
 			id_user: findUser.id,
 			email: findUser.email,
 			username: findUser.username,
 			role: findUser.role,
 		};
+
 		tokenPayLoad = JSON.stringify(tokenPayLoad);
 		let token = await jsonwebtoken.sign(tokenPayLoad, SECRET_KEY);
+
 		return response.status(200).json({
 			message: "Success Login",
 			data: {
@@ -53,7 +67,7 @@ exports.userRegister = async (request, response) => {
 			username: request.body.username,
 			role: "customer",
 			email: request.body.email,
-			password: md5(request.body.password),
+			password: await bcrypt.hash(req.body.password, 10),
 		};
 
 		if (
@@ -132,7 +146,6 @@ exports.findUser = async (request, response) => {
 				{ username: { [Op.substring]: keyword } },
 				{ role: { [Op.substring]: keyword } },
 				{ email: { [Op.substring]: keyword } },
-				{ password: { [Op.substring]: keyword } },
 			],
 		},
 	});

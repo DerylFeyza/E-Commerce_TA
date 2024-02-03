@@ -1,6 +1,5 @@
 "use strict";
 const faker = require("faker");
-const md5 = require("md5");
 const { QueryTypes } = require("sequelize");
 
 /** @type {import('sequelize-cli').Migration} */

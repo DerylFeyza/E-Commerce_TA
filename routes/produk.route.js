@@ -29,5 +29,6 @@ app.put(
 	checkRole(["seller", "admin"]),
 	produkController.updateProduct
 );
+app.get("/image/:filename", produkController.getProductImage);
 
 module.exports = app;
