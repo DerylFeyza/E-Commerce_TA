@@ -41,6 +41,7 @@ exports.login = async (request, response) => {
 
 		return response.status(200).json({
 			message: "Success Login",
+			status: true,
 			data: {
 				token: token,
 				id_user: findUser.id,
