@@ -39,6 +39,11 @@ exports.login = async (request, response) => {
 		tokenPayLoad = JSON.stringify(tokenPayLoad);
 		let token = await jsonwebtoken.sign(tokenPayLoad, SECRET_KEY);
 
+		response.cookie("token", "Bearer " + token, {
+			httpOnly: true,
+			// You can set other cookie options here such as 'maxAge' for expiration
+		});
+
 		return response.status(200).json({
 			message: "Success Login",
 			status: true,
