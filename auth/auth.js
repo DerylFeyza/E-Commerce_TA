@@ -1,15 +1,15 @@
 const jsonwebtoken = require("jsonwebtoken");
 const authVerify = async (req, res, next) => {
 	try {
-		const header = req.headers.authorization;
-		if (header == null) {
+		const cookie = req.cookies.token;
+		if (cookie == null) {
 			return res.status(400).json({
 				message: "missing token",
 				err: null,
 			});
 		}
 
-		let token = header.split(" ")[1];
+		let token = cookie.split(" ")[1];
 		const SECRET_KEY = "secretcode";
 
 		let decodedToken;

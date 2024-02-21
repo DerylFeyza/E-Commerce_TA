@@ -13,6 +13,37 @@ exports.getallProduct = async (request, response) => {
 	});
 };
 
+exports.getAllPaginatedProducts = async (request, response) => {
+	try {
+		const page = parseInt(request.query.page) || 1;
+		const limit = 20;
+
+		const startIndex = (page - 1) * limit;
+
+		const totalProducts = await produkModel.count();
+		const totalPages = Math.ceil(totalProducts / limit);
+
+		const products = await produkModel.findAll({
+			offset: startIndex,
+			limit: limit,
+		});
+
+		return response.json({
+			success: true,
+			data: products,
+			pagination: {
+				totalProducts: totalProducts,
+				totalPages: totalPages,
+				currentPage: page,
+			},
+			message: "Products loaded successfully",
+		});
+	} catch (err) {
+		console.log(err);
+		return response.sendStatus(400);
+	}
+};
+
 exports.findProduct = async (request, response) => {
 	let keyword = request.body.keyword;
 	let product = await produkModel.findAll({

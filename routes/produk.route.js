@@ -5,11 +5,12 @@ const produkController = require("../controllers/produk.controller");
 const auth = require("../auth/auth");
 const { checkRole } = require("../middleware/checkRole");
 app.get(
-	"/",
+	"/getAll",
 	auth.authVerify,
 	checkRole(["admin"]),
 	produkController.getallProduct
 );
+app.get("/", produkController.getAllPaginatedProducts);
 app.post("/find", produkController.findProduct);
 app.post(
 	"/add",
