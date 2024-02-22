@@ -23,10 +23,13 @@ module.exports = {
 			data.push({
 				nama_barang: randomProductName,
 				id_publisher: randomUserID,
-				gambar_barang: "foto-1704546917091",
+				gambar_barang: "foto-1704546917091.png",
 				kategori: "miaw",
 				harga: randomPrice,
 				stok: randomStock,
+				details:
+					"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+
 				createdAt: new Date(),
 				updatedAt: new Date(),
 			});

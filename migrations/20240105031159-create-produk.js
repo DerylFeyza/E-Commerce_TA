@@ -31,6 +31,9 @@ module.exports = {
 			stok: {
 				type: Sequelize.INTEGER,
 			},
+			details: {
+				type: Sequelize.TEXT,
+			},
 			createdAt: {
 				allowNull: false,
 				type: Sequelize.DATE,
