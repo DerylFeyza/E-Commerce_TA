@@ -11,6 +11,7 @@ app.get(
 	produkController.getallProduct
 );
 app.get("/", produkController.getAllPaginatedProducts);
+app.get("/:id", produkController.findProductById);
 app.post("/find", produkController.findProduct);
 app.post(
 	"/add",

@@ -24,6 +24,7 @@ exports.getAllPaginatedProducts = async (request, response) => {
 		const totalPages = Math.ceil(totalProducts / limit);
 
 		const products = await produkModel.findAll({
+			attributes: { exclude: ["details"] },
 			offset: startIndex,
 			limit: limit,
 		});
@@ -62,6 +63,32 @@ exports.findProduct = async (request, response) => {
 	});
 };
 
+exports.findProductById = async (request, response) => {
+	try {
+		const productId = request.params.id;
+		const product = await produkModel.findByPk(productId);
+
+		if (!product) {
+			return response.status(404).json({
+				success: false,
+				message: "Product not found",
+			});
+		}
+
+		return response.json({
+			success: true,
+			data: product,
+			message: "Product found",
+		});
+	} catch (error) {
+		console.error("Error finding product by ID:", error);
+		return response.status(500).json({
+			success: false,
+			message: "Internal server error",
+		});
+	}
+};
+
 exports.addProduct = async (request, response) => {
 	upload(request, response, async (error) => {
 		if (error) {
@@ -79,6 +106,7 @@ exports.addProduct = async (request, response) => {
 			kategori: request.body.kategori,
 			harga: request.body.harga,
 			stok: request.body.stok,
+			details: request.body.details,
 		};
 
 		produkModel
@@ -101,68 +129,64 @@ exports.addProduct = async (request, response) => {
 
 exports.updateProduct = async (request, response) => {
 	upload(request, response, async (error) => {
-		if (error) {
-			return response.json({ message: error });
-		}
-		let id = request.params.id;
-		let dataproduk = {
-			id_publisher: request.userData.id_user,
-			nama_barang: request.body.nama_barang,
-			gambar_barang: request.file.filename,
-			kategori: request.body.kategori,
-			harga: request.body.harga,
-			stok: request.body.stok,
-		};
-		if (request.file) {
-			const selectedPhoto = await produkModel.findOne({
-				where: { id: id },
-			});
-			const oldPhoto = selectedPhoto.gambar_barang;
-			const pathPhoto = path.join(__dirname, `../fotoproduk`, oldPhoto);
-			if (fs.existsSync(pathPhoto)) {
-				fs.unlinkSync(pathPhoto, (error) => console.log(error));
+		try {
+			if (error) {
+				return response.json({ message: error });
 			}
-			dataproduk.foto = request.file.filename;
-		}
-		produkModel
-			.update(dataproduk, { where: { id: id } })
-			.then((result) => {
-				return response.json({
-					success: true,
-					message: "product has been updated",
+			let id = request.params.id;
+			let dataproduk = {
+				id_publisher: request.userData.id_user,
+				nama_barang: request.body.nama_barang,
+				gambar_barang: request.file.filename,
+				kategori: request.body.kategori,
+				harga: request.body.harga,
+				stok: request.body.stok,
+			};
+			if (request.file) {
+				const selectedPhoto = await produkModel.findOne({
+					where: { id: id },
 				});
-			})
-			.catch((error) => {
-				return response.json({
-					success: false,
-					message: error.message,
-				});
+				const oldPhoto = selectedPhoto.gambar_barang;
+				const pathPhoto = path.join(__dirname, `../fotoproduk`, oldPhoto);
+				if (fs.existsSync(pathPhoto)) {
+					fs.unlinkSync(pathPhoto, (error) => console.log(error));
+				}
+				dataproduk.foto = request.file.filename;
+			}
+			produkModel.update(dataproduk, { where: { id: id } });
+			return response.json({
+				success: true,
+				message: "product has been updated",
 			});
+		} catch (err) {
+			return response.json({
+				success: false,
+				message: err.message,
+			});
+		}
 	});
 };
 
 exports.deleteProduct = async (request, response) => {
-	const id = request.params.id;
-	const fotodata = await produkModel.findOne({ where: { id: id } });
-	const oldPhoto = fotodata.gambar_barang;
-	const pathPhoto = path.join(__dirname, `../fotoproduk`, oldPhoto);
-	if (fs.existsSync(pathPhoto)) {
-		fs.unlink(pathPhoto, (error) => console.log(error));
-	}
-	produkModel
-		.destroy({ where: { id: id } })
-		.then((result) => {
-			return response.json({
-				success: true,
-				message: "product has been deleted",
-			});
-		})
-		.catch((error) => {
-			return response.json({
-				success: false,
-				message: error.message,
-			});
+	try {
+		const id = request.params.id;
+		const fotodata = await produkModel.findOne({ where: { id: id } });
+		const oldPhoto = fotodata.gambar_barang;
+		const pathPhoto = path.join(__dirname, `../fotoproduk`, oldPhoto);
+		if (fs.existsSync(pathPhoto)) {
+			fs.unlink(pathPhoto, (error) => console.log(error));
+		}
+		produkModel.destroy({ where: { id: id } });
+		return response.json({
+			success: true,
+			message: "product has been deleted",
 		});
+	} catch (err) {
+		return response.json({
+			success: false,
+			message: err.message,
+		});
+	}
 };
 
 exports.getProductImage = (request, response) => {
