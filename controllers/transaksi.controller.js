@@ -1,6 +1,6 @@
 const produkModel = require("../models/index").produk;
 const cartModel = require("../models/index").keranjanguser;
-const cartDetailsModel = require("../models/index").keranjangitems;
+const cartDetailsModel = require("../models/index").detailkeranjang;
 const Op = require("sequelize").Op;
 
 exports.productToCart = async (request, response) => {
