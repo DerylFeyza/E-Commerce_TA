@@ -43,10 +43,6 @@ exports.productToCart = async (request, response) => {
 						},
 					}
 				);
-
-				totalharga = await cartDetailsModel.sum("total", {
-					where: { id_keranjang: id_keranjang },
-				});
 			} else {
 				const detailsoforder = {
 					id_produk: request.body.id_produk,
@@ -55,12 +51,12 @@ exports.productToCart = async (request, response) => {
 					id_keranjang: id_keranjang,
 				};
 
-				totalharga = await cartDetailsModel.sum("total", {
-					where: { id_keranjang: id_keranjang },
-				});
-
 				await cartDetailsModel.create(detailsoforder);
 			}
+
+			totalharga = await cartDetailsModel.sum("total", {
+				where: { id_keranjang: id_keranjang },
+			});
 
 			await cartModel.update(
 				{ totalharga: totalharga },
