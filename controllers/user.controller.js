@@ -73,7 +73,7 @@ exports.userRegister = async (request, response) => {
 			username: request.body.username,
 			role: "customer",
 			email: request.body.email,
-			password: await bcrypt.hash(req.body.password, 10),
+			password: await bcrypt.hash(request.body.password, 10),
 		};
 
 		if (
