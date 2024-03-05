@@ -1,7 +1,6 @@
 const produkModel = require("../models/index").produk;
 const cartModel = require("../models/index").keranjanguser;
 const cartDetailsModel = require("../models/index").detailkeranjang;
-const Op = require("sequelize").Op;
 
 exports.productToCart = async (request, response) => {
 	try {
@@ -9,7 +8,6 @@ exports.productToCart = async (request, response) => {
 			id_user: request.userData.id_user,
 			status: "draft",
 		};
-		let totalharga = 0;
 		const checkExistingCart = await cartModel.findOne({
 			where: { id_user: cartData.id_user, status: "draft" },
 		});
@@ -53,22 +51,7 @@ exports.productToCart = async (request, response) => {
 
 				await cartDetailsModel.create(detailsoforder);
 			}
-
-			totalharga = await cartDetailsModel.sum("total", {
-				where: { id_keranjang: id_keranjang },
-			});
-
-			await cartModel.update(
-				{ totalharga: totalharga },
-				{ where: { id: id_keranjang } }
-			);
-
-			return response.json({
-				success: true,
-				message: "Product added to the cart successfully",
-			});
 		} else {
-			// Create new cart and add product
 			const result = await cartModel.create(cartData);
 			const id_keranjang = result.id;
 
@@ -82,25 +65,79 @@ exports.productToCart = async (request, response) => {
 				total: request.body.quantity * productData.harga,
 				id_keranjang: id_keranjang,
 			};
-
-			totalharga += detailsoforder.total;
-
 			await cartDetailsModel.create(detailsoforder);
-
-			await cartModel.update(
-				{ totalharga: totalharga },
-				{ where: { id: id_keranjang } }
-			);
-
-			return response.json({
-				success: true,
-				message: "New cart created and product has been added to the cart",
-			});
 		}
+		await exports.recalculateTotalPrice(response, request.userData.id_user);
+		return response.json({
+			success: true,
+			message: "New cart created and product has been added to the cart",
+		});
 	} catch (error) {
 		return response.json({
 			success: false,
 			message: error.message,
+		});
+	}
+};
+
+exports.recalculateTotalPrice = async (response, id_user) => {
+	try {
+		const userCart = await cartModel.findOne({
+			where: { status: "draft", id_user: id_user },
+		});
+
+		const id_keranjang = userCart.id;
+		if (!id_keranjang) {
+			return response.json({
+				success: false,
+				data: cartData,
+				message: "keranjang not found, go shop",
+			});
+		}
+
+		totalharga = await cartDetailsModel.sum("total", {
+			where: { id_keranjang: id_keranjang },
+		});
+
+		await cartModel.update(
+			{ totalharga: totalharga },
+			{ where: { id: id_keranjang } }
+		);
+	} catch (error) {
+		return response.json({
+			success: false,
+			message: error.message,
+		});
+	}
+};
+
+exports.removeProductFromCart = async (request, response) => {
+	const id = request.params.id;
+	try {
+		const userCart = await cartModel.findOne({
+			where: { status: "draft", id_user: request.userData.id_user },
+		});
+
+		const isDeleted = await cartDetailsModel.destroy({
+			where: { id_produk: id, id_keranjang: userCart.id },
+		});
+
+		if (!isDeleted) {
+			return response.json({
+				success: false,
+				message: "No Product Found",
+			});
+		}
+		await exports.recalculateTotalPrice(response, request.userData.id_user);
+		return response.json({
+			success: true,
+			message: "Product Has Been Deleted from Cart",
+		});
+	} catch (error) {
+		console.error("Error deleting product", error);
+		return response.status(500).json({
+			success: false,
+			message: "Internal server error",
 		});
 	}
 };
