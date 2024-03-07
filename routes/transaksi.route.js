@@ -4,7 +4,7 @@ const auth = require("../auth/auth");
 const transaksiController = require("../controllers/transaksi.controller");
 
 app.post("/", auth.authVerify, transaksiController.productToCart);
-app.post("/checkout", auth.authVerify, transaksiController.checkout);
 app.delete("/:id", auth.authVerify, transaksiController.removeProductFromCart);
+app.post("/checkout", auth.authVerify, transaksiController.checkout);
 
 module.exports = app;
