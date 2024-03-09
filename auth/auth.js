@@ -3,7 +3,7 @@ const authVerify = async (req, res, next) => {
 	try {
 		const header = req.headers.authorization;
 		if (header == null) {
-			return res.status(402).json({
+			return res.status(401).json({
 				message: "missing token",
 				err: null,
 			});
@@ -14,7 +14,7 @@ const authVerify = async (req, res, next) => {
 
 		let decodedToken;
 		try {
-			decodedToken = await jsonwebtoken.verify(token, SECRET_KEY);
+			decodedToken = jsonwebtoken.verify(token, SECRET_KEY);
 		} catch (error) {
 			if (error instanceof jsonwebtoken.TokenExpiredError) {
 				return res.status(400).json({

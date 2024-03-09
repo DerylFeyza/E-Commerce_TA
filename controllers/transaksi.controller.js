@@ -223,23 +223,23 @@ exports.removeProductFromCart = async (request, response) => {
 // 	}
 // };
 
-exports.checkout = async (req, res) => {
+exports.checkout = async (request, response) => {
 	try {
-		const iduser = req.userData.id_user;
-		console.log(iduser);
+		const iduser = request.userData.id_user;
 		await cartModel.update(
 			{ status: "dibayar" },
 			{
 				where: { id_user: iduser, status: "draft" },
 			}
 		);
-		return res.json({
+		return response.json({
 			success: true,
 			message: "checkout berhasil",
 		});
 	} catch (error) {
-		return res.status(401).json({
+		return response.status(401).json({
 			success: false,
+			user: request.userData.id_user,
 			message: `Unauthorized: ${error.message}`,
 		});
 	}
