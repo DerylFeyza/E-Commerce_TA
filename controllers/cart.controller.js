@@ -1,7 +1,7 @@
 const cartModel = require("../models/index").keranjanguser;
 const cartDetailsModel = require("../models/index").detailkeranjang;
 const userModel = require("../models/index").user;
-const Op = require("sequelize").Op;
+const produkModel = require("../models/index").produk;
 
 exports.getCartOnDraft = async (request, response) => {
 	try {
@@ -58,6 +58,49 @@ exports.getTransactionHistory = async (request, response) => {
 		return response.status(500).json({
 			success: false,
 			message: "Internal server error",
+		});
+	}
+};
+
+exports.getUserReceipt = async (request, response) => {
+	const iduser = request.userData.id_user;
+	const idTransaksi = request.params.id;
+	try {
+		const keranjang = await cartModel.findOne({
+			where: { id: idTransaksi, status: "dibayar", id_user: iduser },
+		});
+
+		if (!keranjang) {
+			return response.status(401).json({
+				success: false,
+				message: `Transaction Not Found`,
+			});
+		}
+
+		const keranjangDetails = await cartDetailsModel.findAll({
+			where: { id_keranjang: idTransaksi },
+		});
+
+		const details = [];
+
+		for (const detail of keranjangDetails) {
+			const productDetails = await produkModel.findOne({
+				attributes: ["nama_barang", "harga"],
+				where: { id: detail.id_produk },
+			});
+			details.push({ cart: { detail, productDetails } });
+		}
+
+		return response.json({
+			success: true,
+			data: keranjang,
+			details,
+			message: "Payment Receipt has been successfully loaded",
+		});
+	} catch (error) {
+		return response.status(401).json({
+			success: false,
+			message: `Something went wrong`,
 		});
 	}
 };
