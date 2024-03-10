@@ -3,6 +3,18 @@ const cartDetailsModel = require("../models/index").detailkeranjang;
 const userModel = require("../models/index").user;
 const produkModel = require("../models/index").produk;
 
+exports.getProductDetailsForCart = async (keranjangDetails) => {
+	const details = [];
+	for (const detail of keranjangDetails) {
+		const productDetails = await produkModel.findOne({
+			attributes: ["id", "nama_barang", "harga", "gambar_barang", "stok"],
+			where: { id: detail.id_produk },
+		});
+		details.push(productDetails);
+	}
+	return details;
+};
+
 exports.getCartOnDraft = async (request, response) => {
 	try {
 		const userCart = await cartModel.findOne({
@@ -19,39 +31,14 @@ exports.getCartOnDraft = async (request, response) => {
 			where: { id_keranjang: userCart.id },
 		});
 
+		const products = await this.getProductDetailsForCart(userCartDetails);
+
 		return response.json({
 			success: true,
 			cart: userCart,
 			data: userCartDetails,
+			products,
 			message: "cart has been successfully fetched",
-		});
-	} catch (error) {
-		console.error("Error fetching cart", error);
-		return response.status(500).json({
-			success: false,
-			message: "Internal server error",
-		});
-	}
-};
-
-exports.getTransactionHistory = async (request, response) => {
-	try {
-		const userCart = await cartModel.findAll({
-			attributes: ["id", "totalharga", "updatedAt"],
-			where: { status: "dibayar", id_user: request.userData.id_user },
-		});
-
-		if (!userCart) {
-			return response.json({
-				success: false,
-				message: "user have not made a transaction",
-			});
-		}
-
-		return response.json({
-			success: true,
-			data: userCart,
-			message: "Transaction History has been successfully fetched",
 		});
 	} catch (error) {
 		console.error("Error fetching cart", error);
@@ -81,15 +68,7 @@ exports.getUserReceipt = async (request, response) => {
 			where: { id_keranjang: idTransaksi },
 		});
 
-		const details = [];
-
-		for (const detail of keranjangDetails) {
-			const productDetails = await produkModel.findOne({
-				attributes: ["nama_barang", "harga"],
-				where: { id: detail.id_produk },
-			});
-			details.push({ cart: { detail, productDetails } });
-		}
+		const details = await this.getProductDetailsForCart(keranjangDetails);
 
 		return response.json({
 			success: true,
@@ -101,6 +80,34 @@ exports.getUserReceipt = async (request, response) => {
 		return response.status(401).json({
 			success: false,
 			message: `Something went wrong`,
+		});
+	}
+};
+
+exports.getTransactionHistory = async (request, response) => {
+	try {
+		const userCart = await cartModel.findAll({
+			attributes: ["id", "totalharga", "updatedAt"],
+			where: { status: "dibayar", id_user: request.userData.id_user },
+		});
+
+		if (!userCart) {
+			return response.json({
+				success: false,
+				message: "user have not made a transaction",
+			});
+		}
+
+		return response.json({
+			success: true,
+			data: userCart,
+			message: "Transaction History has been successfully fetched",
+		});
+	} catch (error) {
+		console.error("Error fetching cart", error);
+		return response.status(500).json({
+			success: false,
+			message: "Internal server error",
 		});
 	}
 };
