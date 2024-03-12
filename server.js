@@ -24,6 +24,8 @@ const transaksiRoute = require("./routes/transaksi.route");
 app.use("/transaksi", transaksiRoute);
 const cartRoute = require("./routes/cart.route");
 app.use("/cart", cartRoute);
+const receiptRoute = require("./routes/receipt.route");
+app.use("/receipt", receiptRoute);
 
 app.listen(PORT, () => {
 	console.log(`dah jalan wir ${PORT}`);
