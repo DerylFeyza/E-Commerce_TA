@@ -13,6 +13,25 @@ exports.getallProduct = async (request, response) => {
 	});
 };
 
+exports.getallMerchantProduct = async (request, response) => {
+	const iduser = request.userData.id_user;
+	try {
+		let merchantProducts = await produkModel.findAll({
+			where: { id_publisher: iduser },
+		});
+		return response.json({
+			success: true,
+			data: merchantProducts,
+			message: "all products has been loaded",
+		});
+	} catch (error) {
+		return response.status(500).json({
+			success: false,
+			message: "Internal server error",
+		});
+	}
+};
+
 exports.getAllPaginatedProducts = async (request, response) => {
 	try {
 		const page = parseInt(request.query.page) || 1;
@@ -90,41 +109,39 @@ exports.findProductById = async (request, response) => {
 };
 
 exports.addProduct = async (request, response) => {
-	upload(request, response, async (error) => {
-		if (error) {
-			console.log(error);
-			return response.json({ message: error });
-		}
-		if (!request.file) {
-			return response.json({ message: "file nya dimana" });
-		}
+	try {
+		upload(request, response, async (error) => {
+			if (error) {
+				console.log(error);
+				return response.json({ message: error });
+			}
+			if (!request.file) {
+				return response.json({ message: "file nya dimana" });
+			}
 
-		let newProduct = {
-			id_publisher: request.userData.id_user,
-			nama_barang: request.body.nama_barang,
-			gambar_barang: request.file.filename,
-			kategori: request.body.kategori,
-			harga: request.body.harga,
-			stok: request.body.stok,
-			details: request.body.details,
-		};
+			let newProduct = {
+				id_publisher: request.userData.id_user,
+				nama_barang: request.body.nama_barang,
+				gambar_barang: request.file.filename,
+				kategori: request.body.kategori,
+				harga: request.body.harga,
+				stok: request.body.stok,
+				details: request.body.details,
+			};
 
-		produkModel
-			.create(newProduct)
-			.then((result) => {
-				return response.json({
-					success: true,
-					data: result,
-					message: "new product has been inserted",
-				});
-			})
-			.catch((error) => {
-				return response.json({
-					success: false,
-					message: error.message,
-				});
-			});
-	});
+			produkModel.create(newProduct);
+		});
+		return response.json({
+			success: true,
+			data: result,
+			message: "new product has been inserted",
+		});
+	} catch (error) {
+		return response.json({
+			success: false,
+			message: error.message,
+		});
+	}
 };
 
 exports.updateProduct = async (request, response) => {
