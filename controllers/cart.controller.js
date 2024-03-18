@@ -1,18 +1,6 @@
 const cartModel = require("../models/index").keranjanguser;
 const cartDetailsModel = require("../models/index").detailkeranjang;
-const produkModel = require("../models/index").produk;
-
-exports.getProductDetailsForCart = async (keranjangDetails) => {
-	const details = [];
-	for (const detail of keranjangDetails) {
-		const productDetails = await produkModel.findOne({
-			attributes: ["id", "nama_barang", "harga", "gambar_barang", "stok"],
-			where: { id: detail.id_produk },
-		});
-		details.push(productDetails);
-	}
-	return details;
-};
+const { getProductDetailsForCart } = require("./produk.controller");
 
 exports.getCartOnDraft = async (request, response) => {
 	try {
@@ -30,7 +18,7 @@ exports.getCartOnDraft = async (request, response) => {
 			where: { id_keranjang: userCart.id },
 		});
 
-		const products = await this.getProductDetailsForCart(userCartDetails);
+		const products = await getProductDetailsForCart(userCartDetails);
 
 		return response.json({
 			success: true,

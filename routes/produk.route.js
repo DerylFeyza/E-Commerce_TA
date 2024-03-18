@@ -16,6 +16,12 @@ app.get(
 	checkRole(["seller", "admin"]),
 	produkController.getallMerchantProduct
 );
+app.get(
+	"/merchant/purchases",
+	auth.authVerify,
+	checkRole(["seller", "admin"]),
+	produkController.getRecentPurchase
+);
 app.get("/", produkController.getAllPaginatedProducts);
 app.get("/:id", produkController.findProductById);
 app.post("/find", produkController.findProduct);

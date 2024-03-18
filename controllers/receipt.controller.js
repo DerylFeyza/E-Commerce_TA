@@ -1,7 +1,7 @@
 const cartModel = require("../models/index").keranjanguser;
 const cartDetailsModel = require("../models/index").detailkeranjang;
 const userModel = require("../models/index").user;
-const { getProductDetailsForCart } = require("./cart.controller");
+const { getProductDetailsForCart } = require("./produk.controller");
 
 exports.getUserReceipt = async (request, response) => {
 	const iduser = request.userData.id_user;

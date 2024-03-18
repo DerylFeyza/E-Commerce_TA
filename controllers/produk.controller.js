@@ -1,8 +1,21 @@
 const produkModel = require("../models/index").produk;
 const Op = require("sequelize").Op;
 const upload = require("./upload-foto").single("gambar_barang");
+const cartDetailsModel = require("../models/index").detailkeranjang;
 const path = require("path");
 const fs = require("fs");
+
+exports.getProductDetailsForCart = async (keranjangDetails) => {
+	const details = [];
+	for (const detail of keranjangDetails) {
+		const productDetails = await produkModel.findOne({
+			attributes: ["id", "nama_barang", "harga", "gambar_barang", "stok"],
+			where: { id: detail.id_produk },
+		});
+		details.push(productDetails);
+	}
+	return details;
+};
 
 exports.getallProduct = async (request, response) => {
 	let products = await produkModel.findAll();
@@ -23,6 +36,39 @@ exports.getallMerchantProduct = async (request, response) => {
 			success: true,
 			data: merchantProducts,
 			message: "all products has been loaded",
+		});
+	} catch (error) {
+		return response.status(500).json({
+			success: false,
+			message: "Internal server error",
+		});
+	}
+};
+exports.getRecentPurchase = async (request, response) => {
+	const iduser = request.userData.id_user;
+	try {
+		let merchantProducts = await produkModel.findAll({
+			where: { id_publisher: iduser },
+		});
+		const soldProducts = merchantProducts.map((product) => product.id);
+		const recentPurchases = await cartDetailsModel.findAll({
+			where: {
+				id_produk: soldProducts,
+			},
+		});
+		if (!recentPurchases) {
+			return response.json({
+				success: true,
+				data: merchantProducts,
+				purchase: "no recent purchase",
+				message: "Recent purchases have been loaded",
+			});
+		}
+		return response.json({
+			success: true,
+			data: merchantProducts,
+			purchases: recentPurchases,
+			message: "Recent purchases have been loaded",
 		});
 	} catch (error) {
 		return response.status(500).json({
