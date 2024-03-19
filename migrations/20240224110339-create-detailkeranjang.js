@@ -29,6 +29,9 @@ module.exports = {
 			total: {
 				type: Sequelize.INTEGER,
 			},
+			checkedout: {
+				type: Sequelize.STRING,
+			},
 			createdAt: {
 				allowNull: false,
 				type: Sequelize.DATE,

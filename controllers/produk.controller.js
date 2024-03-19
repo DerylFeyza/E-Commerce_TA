@@ -50,24 +50,27 @@ exports.getRecentPurchase = async (request, response) => {
 		let merchantProducts = await produkModel.findAll({
 			where: { id_publisher: iduser },
 		});
-		const soldProducts = merchantProducts.map((product) => product.id);
+		const soldProductsIds = merchantProducts.map((product) => product.id);
 		const recentPurchases = await cartDetailsModel.findAll({
 			where: {
-				id_produk: soldProducts,
+				id_produk: soldProductsIds,
+				checkedout: "true",
 			},
+			order: [["updatedAt", "DESC"]],
 		});
 		if (!recentPurchases) {
 			return response.json({
 				success: true,
-				data: merchantProducts,
 				purchase: "no recent purchase",
 				message: "Recent purchases have been loaded",
 			});
 		}
+
+		const soldProducts = await this.getProductDetailsForCart(recentPurchases);
 		return response.json({
 			success: true,
-			data: merchantProducts,
 			purchases: recentPurchases,
+			details: soldProducts,
 			message: "Recent purchases have been loaded",
 		});
 	} catch (error) {
@@ -176,11 +179,10 @@ exports.addProduct = async (request, response) => {
 			};
 
 			produkModel.create(newProduct);
-		});
-		return response.json({
-			success: true,
-			data: result,
-			message: "new product has been inserted",
+			return response.json({
+				success: true,
+				message: "new product has been inserted",
+			});
 		});
 	} catch (error) {
 		return response.json({

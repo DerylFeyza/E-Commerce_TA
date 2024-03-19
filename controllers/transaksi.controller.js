@@ -143,16 +143,34 @@ exports.removeProductFromCart = async (request, response) => {
 };
 
 exports.checkout = async (request, response) => {
+	const iduser = request.userData.id_user;
 	try {
-		const iduser = request.userData.id_user;
+		const cartUser = await cartModel.findOne({
+			where: { id_user: iduser, status: "draft" },
+		});
+
+		if (!cartUser) {
+			return response.json({
+				success: false,
+				message: "cart not found",
+			});
+		}
+
 		await cartModel.update(
 			{ status: "dibayar" },
+			{ where: { id_user: iduser, status: "draft" } }
+		);
+
+		await cartDetailsModel.update(
+			{ checkedout: "true" },
 			{
-				where: { id_user: iduser, status: "draft" },
+				where: { id_keranjang: cartUser.id },
 			}
 		);
+
 		return response.json({
 			success: true,
+			data: cartUser.id,
 			message: "checkout berhasil",
 		});
 	} catch (error) {
