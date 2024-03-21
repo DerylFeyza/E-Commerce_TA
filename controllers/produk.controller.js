@@ -195,29 +195,46 @@ exports.addProduct = async (request, response) => {
 exports.updateProduct = async (request, response) => {
 	upload(request, response, async (error) => {
 		try {
+			const isOwner = await produkModel.findOne({
+				where: { id_publisher: request.userData.id_user },
+			});
+			if (!isOwner) {
+				return response.status(400).json({
+					success: false,
+					message: "Unauthorized",
+				});
+			}
+
 			if (error) {
 				return response.json({ message: error });
 			}
 			let id = request.params.id;
+			const oldProduct = await produkModel.findOne({
+				where: { id: id },
+			});
 			let dataproduk = {
-				id_publisher: request.userData.id_user,
-				nama_barang: request.body.nama_barang,
-				gambar_barang: request.file.filename,
-				kategori: request.body.kategori,
-				harga: request.body.harga,
-				stok: request.body.stok,
+				nama_barang: request.body.nama_barang
+					? request.body.nama_barang
+					: oldProduct.nama_barang,
+				gambar_barang: request.file
+					? request.file.filename
+					: oldProduct.gambar_barang,
+				kategori: request.body.kategori
+					? request.body.kategori
+					: oldProduct.kategori,
+				harga: request.body.harga ? request.body.harga : oldProduct.harga,
+				stok: request.body.stok ? request.body.stok : oldProduct.stok,
 			};
+
 			if (request.file) {
-				const selectedPhoto = await produkModel.findOne({
-					where: { id: id },
-				});
-				const oldPhoto = selectedPhoto.gambar_barang;
+				const oldPhoto = oldProduct.gambar_barang;
 				const pathPhoto = path.join(__dirname, `../fotoproduk`, oldPhoto);
 				if (fs.existsSync(pathPhoto)) {
 					fs.unlinkSync(pathPhoto, (error) => console.log(error));
 				}
 				dataproduk.foto = request.file.filename;
 			}
+
 			produkModel.update(dataproduk, { where: { id: id } });
 			return response.json({
 				success: true,
