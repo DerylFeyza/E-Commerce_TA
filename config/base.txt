@@ -21,3 +21,28 @@
 // 		"dialect": "mysql"
 // 	}
 // }
+
+{
+	"development": {
+		"username": "admin",
+		"password": "password",
+		"database": "ecommerce",
+		"host": "ecommerce.c908c2806l0g.us-east-1.rds.amazonaws.com",
+		"dialect": "mysql"
+	},
+	"test": {
+		"username": "admin",
+		"password": "password",
+		"database": "ecommerce",
+		"host": "ecommerce.c908c2806l0g.us-east-1.rds.amazonaws.com",
+		"dialect": "mysql"
+	},
+	"production": {
+		"username": "admin",
+		"password": "password",
+		"database": "ecommerce",
+		"host": "ecommerce.c908c2806l0g.us-east-1.rds.amazonaws.com",
+		"dialect": "mysql"
+	}
+}
+

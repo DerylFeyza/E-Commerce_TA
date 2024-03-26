@@ -71,34 +71,3 @@ exports.getTransactionHistory = async (request, response) => {
 		});
 	}
 };
-
-exports.userDeleteOwnReceipt = async (request, response) => {
-	const iduser = request.userData.id_user;
-	const idTransaksi = request.params.id;
-	try {
-		const wawa = await cartDetailsModel.destroy({
-			where: { id_keranjang: idTransaksi },
-		});
-
-		if (!wawa) {
-			return response.status(400).json({
-				success: false,
-				message: "Transaction doesn't exist",
-			});
-		}
-
-		await cartModel.destroy({
-			where: { id: idTransaksi, id_user: iduser, status: "dibayar" },
-		});
-
-		return response.json({
-			success: true,
-			message: "Transaction History has been successfully deleted",
-		});
-	} catch (error) {
-		return response.status(500).json({
-			success: false,
-			message: "Delete unsuccessful",
-		});
-	}
-};
