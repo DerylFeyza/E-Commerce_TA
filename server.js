@@ -26,6 +26,8 @@ const cartRoute = require("./routes/cart.route");
 app.use("/cart", cartRoute);
 const receiptRoute = require("./routes/receipt.route");
 app.use("/receipt", receiptRoute);
+const addressRoute = require("./routes/alamat.route");
+app.use("/address", addressRoute);
 
 app.listen(PORT, () => {
 	console.log(`dah jalan wir ${PORT}`);

@@ -25,6 +25,13 @@ module.exports = {
 			kategori: {
 				type: Sequelize.STRING,
 			},
+			id_alamat: {
+				type: Sequelize.INTEGER,
+				references: {
+					model: "alamats",
+					key: "id",
+				},
+			},
 			harga: {
 				type: Sequelize.INTEGER,
 			},

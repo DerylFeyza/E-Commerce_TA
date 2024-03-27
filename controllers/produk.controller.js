@@ -173,12 +173,13 @@ exports.addProduct = async (request, response) => {
 				nama_barang: request.body.nama_barang,
 				gambar_barang: request.file.filename,
 				kategori: request.body.kategori,
+				id_alamat: request.body.id_alamat,
 				harga: request.body.harga,
 				stok: request.body.stok,
 				details: request.body.details,
 			};
 
-			produkModel.create(newProduct);
+			await produkModel.create(newProduct);
 			return response.json({
 				success: true,
 				message: "new product has been inserted",
@@ -222,8 +223,14 @@ exports.updateProduct = async (request, response) => {
 				kategori: request.body.kategori
 					? request.body.kategori
 					: oldProduct.kategori,
+				id_alamat: request.body.id_alamat
+					? request.body.id_alamat
+					: oldProduct.id_alamat,
 				harga: request.body.harga ? request.body.harga : oldProduct.harga,
 				stok: request.body.stok ? request.body.stok : oldProduct.stok,
+				details: request.body.details
+					? request.body.details
+					: oldProduct.details,
 			};
 
 			if (request.file) {
@@ -235,7 +242,7 @@ exports.updateProduct = async (request, response) => {
 				dataproduk.foto = request.file.filename;
 			}
 
-			produkModel.update(dataproduk, { where: { id: id } });
+			await produkModel.update(dataproduk, { where: { id: id } });
 			return response.json({
 				success: true,
 				message: "product has been updated",
@@ -258,7 +265,7 @@ exports.deleteProduct = async (request, response) => {
 		if (fs.existsSync(pathPhoto)) {
 			fs.unlink(pathPhoto, (error) => console.log(error));
 		}
-		produkModel.destroy({ where: { id: id } });
+		await produkModel.destroy({ where: { id: id } });
 		return response.json({
 			success: true,
 			message: "product has been deleted",

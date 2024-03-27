@@ -25,6 +25,7 @@ module.exports = {
 				id_publisher: randomUserID,
 				gambar_barang: "foto-1704546917091.png",
 				kategori: "miaw",
+				id_alamat: 1,
 				harga: randomPrice,
 				stok: randomStock,
 				details:
