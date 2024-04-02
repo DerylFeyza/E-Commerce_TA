@@ -16,6 +16,7 @@ module.exports = {
 				username: faker.name.findName(),
 				email: faker.internet.email(),
 				role: randomEnumValue,
+				nama_toko: "Rusdi Barbershop",
 				password: await bcrypt.hash("123", 10),
 				createdAt: randomDate,
 			});

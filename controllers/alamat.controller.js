@@ -1,5 +1,17 @@
 const alamatModel = require("../models/index").alamat;
 
+exports.getAlamatFromId = async (id) => {
+	try {
+		const data = await alamatModel.findByPk(id);
+		return data;
+	} catch (error) {
+		return response.json({
+			success: false,
+			message: error.message,
+		});
+	}
+};
+
 exports.addAddress = async (request, response) => {
 	try {
 		const newAddress = {

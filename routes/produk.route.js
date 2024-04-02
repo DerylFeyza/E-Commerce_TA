@@ -23,6 +23,7 @@ app.get(
 	produkController.getRecentPurchase
 );
 app.get("/", produkController.getAllPaginatedProducts);
+app.get("/cheapest", produkController.getCheapestProduct);
 app.get("/:id", produkController.findProductById);
 app.post("/find", produkController.findProduct);
 app.post(

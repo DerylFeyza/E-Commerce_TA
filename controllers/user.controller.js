@@ -224,3 +224,15 @@ exports.deleteUser = (request, response) => {
 			});
 		});
 };
+
+exports.getUserById = async (id) => {
+	try {
+		const data = await userModel.findByPk(id);
+		return data;
+	} catch (error) {
+		return response.json({
+			success: false,
+			message: error.message,
+		});
+	}
+};
