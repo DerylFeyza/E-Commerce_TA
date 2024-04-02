@@ -2,6 +2,8 @@ const produkModel = require("../models/index").produk;
 const Op = require("sequelize").Op;
 const upload = require("./upload-foto").single("gambar_barang");
 const cartDetailsModel = require("../models/index").detailkeranjang;
+const { getAlamatFromId } = require("./alamat.controller");
+const { getUserById } = require("./user.controller");
 const path = require("path");
 const fs = require("fs");
 
@@ -84,18 +86,34 @@ exports.getRecentPurchase = async (request, response) => {
 exports.getAllPaginatedProducts = async (request, response) => {
 	try {
 		const page = parseInt(request.query.page) || 1;
-		const limit = 20;
+		const limit = 21;
 
 		const startIndex = (page - 1) * limit;
 
 		const totalProducts = await produkModel.count();
 		const totalPages = Math.ceil(totalProducts / limit);
 
-		const products = await produkModel.findAll({
+		let products = await produkModel.findAll({
 			attributes: { exclude: ["details"] },
 			offset: startIndex,
 			limit: limit,
 		});
+
+		products = await Promise.all(
+			products.map(async (product) => {
+				const namaToko = await getUserById(product.id_publisher);
+				const kota = await getAlamatFromId(product.id_alamat);
+				return {
+					...product.toJSON(),
+					additional_info: [
+						{
+							nama_toko: namaToko.nama_toko,
+							kota: kota.kota,
+						},
+					],
+				};
+			})
+		);
 
 		return response.json({
 			success: true,
@@ -109,7 +127,47 @@ exports.getAllPaginatedProducts = async (request, response) => {
 		});
 	} catch (err) {
 		console.log(err);
-		return response.sendStatus(400);
+		return response.sendStatus(500);
+	}
+};
+
+exports.getCheapestProduct = async (request, response) => {
+	try {
+		const page = parseInt(request.query.page) || 1;
+		const limit = 15;
+		const startIndex = (page - 1) * limit;
+
+		let products = await produkModel.findAll({
+			attributes: { exclude: ["details"] },
+			offset: startIndex,
+			limit: limit,
+			order: [["harga", "ASC"]],
+		});
+
+		products = await Promise.all(
+			products.map(async (product) => {
+				const namaToko = await getUserById(product.id_publisher);
+				const kota = await getAlamatFromId(product.id_alamat);
+				return {
+					...product.toJSON(),
+					additional_info: [
+						{
+							nama_toko: namaToko.nama_toko,
+							kota: kota.kota,
+						},
+					],
+				};
+			})
+		);
+
+		return response.json({
+			success: true,
+			data: products,
+			message: "Products loaded successfully",
+		});
+	} catch (err) {
+		console.log(err);
+		return response.sendStatus(500);
 	}
 };
 
@@ -124,6 +182,23 @@ exports.findProduct = async (request, response) => {
 			],
 		},
 	});
+
+	product = await Promise.all(
+		product.map(async (product) => {
+			const namaToko = await getUserById(product.id_publisher);
+			const kota = await getAlamatFromId(product.id_alamat);
+			return {
+				...product.toJSON(),
+				additional_info: [
+					{
+						nama_toko: namaToko.nama_toko,
+						kota: kota.kota,
+					},
+				],
+			};
+		})
+	);
+
 	return response.json({
 		success: true,
 		data: product,
