@@ -86,8 +86,8 @@ exports.getRecentPurchase = async (request, response) => {
 exports.getAllPaginatedProducts = async (request, response) => {
 	try {
 		const page = parseInt(request.query.page) || 1;
-		const limit = 21;
-
+		const limit =
+			parseInt(request.query.limit) || parseInt(request.body.limit) || 20;
 		const startIndex = (page - 1) * limit;
 
 		const totalProducts = await produkModel.count();
@@ -122,6 +122,7 @@ exports.getAllPaginatedProducts = async (request, response) => {
 				totalProducts: totalProducts,
 				totalPages: totalPages,
 				currentPage: page,
+				productsPerPage: limit,
 			},
 			message: "Products loaded successfully",
 		});
@@ -172,6 +173,11 @@ exports.getCheapestProduct = async (request, response) => {
 };
 
 exports.findProduct = async (request, response) => {
+	const page = parseInt(request.query.page) || 1;
+	const limit =
+		parseInt(request.query.limit) || parseInt(request.body.limit) || 20;
+	const startIndex = (page - 1) * limit;
+
 	let keyword = request.body.keyword;
 	let product = await produkModel.findAll({
 		where: {
@@ -181,7 +187,21 @@ exports.findProduct = async (request, response) => {
 				{ harga: { [Op.substring]: keyword } },
 			],
 		},
+		offset: startIndex,
+		limit: limit,
 	});
+
+	let allProduct = await produkModel.count({
+		where: {
+			[Op.or]: [
+				{ nama_barang: { [Op.substring]: keyword } },
+				{ kategori: { [Op.substring]: keyword } },
+				{ harga: { [Op.substring]: keyword } },
+			],
+		},
+	});
+
+	const totalPages = Math.ceil(allProduct / limit);
 
 	product = await Promise.all(
 		product.map(async (product) => {
@@ -202,6 +222,12 @@ exports.findProduct = async (request, response) => {
 	return response.json({
 		success: true,
 		data: product,
+		pagination: {
+			totalProducts: allProduct,
+			totalPages: totalPages,
+			currentPage: page,
+			productsPerPage: limit,
+		},
 		message: "product with the sufficient filter has been shown",
 	});
 };
