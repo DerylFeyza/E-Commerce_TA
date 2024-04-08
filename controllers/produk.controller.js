@@ -360,6 +360,15 @@ exports.updateProduct = async (request, response) => {
 exports.deleteProduct = async (request, response) => {
 	try {
 		const id = request.params.id;
+		const isOwner = await produkModel.findOne({
+			where: { id_publisher: request.userData.id_user },
+		});
+		if (!isOwner) {
+			return response.status(400).json({
+				success: false,
+				message: "Unauthorized",
+			});
+		}
 		const fotodata = await produkModel.findOne({ where: { id: id } });
 		const oldPhoto = fotodata.gambar_barang;
 		const pathPhoto = path.join(__dirname, `../fotoproduk`, oldPhoto);
