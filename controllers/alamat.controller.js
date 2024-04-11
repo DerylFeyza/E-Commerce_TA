@@ -76,9 +76,10 @@ exports.getUserAddress = async (request, response) => {
 
 exports.updateAddress = async (request, response) => {
 	let id = request.params.id;
+	let userID = request.userData.id_user;
 	try {
 		const isOwner = await alamatModel.findOne({
-			where: { id_user: request.userData.id_user },
+			where: { id_user: userID },
 		});
 		if (!isOwner) {
 			return response.status(400).json({
@@ -91,6 +92,22 @@ exports.updateAddress = async (request, response) => {
 			kota: request.body.kota,
 			alamat: request.body.alamat,
 		};
+
+		const checkDuplicate = await alamatModel.findAll({
+			where: {
+				id_user: userID,
+				[Op.or]: [{ nama: AddressData.nama }, { alamat: AddressData.alamat }],
+			},
+		});
+
+		if (checkDuplicate.length > 1) {
+			return response.json({
+				success: false,
+				message: "duplicate input",
+				duplicate: checkDuplicate,
+			});
+		}
+
 		await alamatModel.update(AddressData, { where: { id: id } });
 		return response.json({
 			success: true,
@@ -105,6 +122,7 @@ exports.updateAddress = async (request, response) => {
 };
 
 exports.deleteAddress = async (request, response) => {
+	const id = request.params.id;
 	try {
 		const isOwner = await alamatModel.findOne({
 			where: { id_user: request.userData.id_user },
