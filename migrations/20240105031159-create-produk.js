@@ -41,6 +41,14 @@ module.exports = {
 			details: {
 				type: Sequelize.TEXT,
 			},
+			status: {
+				type: Sequelize.ENUM(
+					"OnSale",
+					"SoldOut",
+					"MissingInformation",
+					"Halted"
+				),
+			},
 			createdAt: {
 				allowNull: false,
 				type: Sequelize.DATE,

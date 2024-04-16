@@ -21,6 +21,14 @@ module.exports = (sequelize, DataTypes) => {
 			harga: DataTypes.INTEGER,
 			stok: DataTypes.INTEGER,
 			details: DataTypes.TEXT,
+			status: {
+				type: DataTypes.ENUM(
+					"OnSale",
+					"SoldOut",
+					"MissingInformation",
+					"Halted"
+				),
+			},
 		},
 		{
 			sequelize,

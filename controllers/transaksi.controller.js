@@ -95,7 +95,7 @@ exports.recalculateTotalPrice = async (response, id_user) => {
 			});
 		}
 
-		totalharga = await cartDetailsModel.sum("total", {
+		const totalharga = await cartDetailsModel.sum("total", {
 			where: { id_keranjang: id_keranjang },
 		});
 
@@ -149,10 +149,59 @@ exports.checkout = async (request, response) => {
 			where: { id_user: iduser, status: "draft" },
 		});
 
+		const idCart = cartUser.id;
+
 		if (!cartUser) {
 			return response.json({
 				success: false,
 				message: "cart not found",
+			});
+		}
+
+		const allProductOnCart = await cartDetailsModel.findAll({
+			where: { id_keranjang: idCart },
+		});
+
+		let insufficientStockProducts = [];
+
+		await Promise.all(
+			allProductOnCart.map(async (cartProduct) => {
+				const existingProduct = await produkModel.findByPk(
+					cartProduct.id_produk
+				);
+
+				const newStock = existingProduct.stok - cartProduct.quantity;
+				if (newStock < 0 || existingProduct.status !== "OnSale") {
+					insufficientStockProducts.push(cartProduct);
+				} else if (newStock == 0) {
+					await produkModel.update(
+						{ stok: newStock, status: "SoldOut" },
+						{ where: { id: cartProduct.id_produk } }
+					);
+				} else {
+					await produkModel.update(
+						{ stok: newStock },
+						{ where: { id: cartProduct.id_produk } }
+					);
+				}
+			})
+		);
+
+		if (insufficientStockProducts.length > 0) {
+			await Promise.all(
+				insufficientStockProducts.map(async (InvalidProducts) => {
+					await cartDetailsModel.destroy({
+						where: { id_keranjang: idCart, id: InvalidProducts.id },
+					});
+				})
+			);
+
+			await this.recalculateTotalPrice(response, iduser);
+			return response.json({
+				success: false,
+				message:
+					"Insufficient Stock, The product with insufficient stock has been removed",
+				insufficientStockProducts: insufficientStockProducts,
 			});
 		}
 
@@ -164,7 +213,7 @@ exports.checkout = async (request, response) => {
 		await cartDetailsModel.update(
 			{ checkedout: "true" },
 			{
-				where: { id_keranjang: cartUser.id },
+				where: { id_keranjang: idCart },
 			}
 		);
 
@@ -174,9 +223,8 @@ exports.checkout = async (request, response) => {
 			message: "checkout berhasil",
 		});
 	} catch (error) {
-		return response.status(401).json({
+		return response.json({
 			success: false,
-			user: request.userData.id_user,
 			message: `Unauthorized: ${error.message}`,
 		});
 	}
