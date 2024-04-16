@@ -46,6 +46,7 @@ exports.getallMerchantProduct = async (request, response) => {
 		});
 	}
 };
+
 exports.getRecentPurchase = async (request, response) => {
 	const iduser = request.userData.id_user;
 	try {
@@ -59,6 +60,7 @@ exports.getRecentPurchase = async (request, response) => {
 				checkedout: "true",
 			},
 			order: [["updatedAt", "DESC"]],
+			limit: 6,
 		});
 		if (!recentPurchases) {
 			return response.json({
@@ -94,6 +96,7 @@ exports.getAllPaginatedProducts = async (request, response) => {
 		const totalPages = Math.ceil(totalProducts / limit);
 
 		let products = await produkModel.findAll({
+			where: { status: "OnSale" },
 			attributes: { exclude: ["details"] },
 			offset: startIndex,
 			limit: limit,
@@ -139,6 +142,7 @@ exports.getCheapestProduct = async (request, response) => {
 		const startIndex = (page - 1) * limit;
 
 		let products = await produkModel.findAll({
+			where: { status: "OnSale" },
 			attributes: { exclude: ["details"] },
 			offset: startIndex,
 			limit: limit,
@@ -177,65 +181,84 @@ exports.findProduct = async (request, response) => {
 	const limit =
 		parseInt(request.query.limit) || parseInt(request.body.limit) || 20;
 	const startIndex = (page - 1) * limit;
-
 	let keyword = request.body.keyword;
-	let product = await produkModel.findAll({
-		where: {
-			[Op.or]: [
-				{ nama_barang: { [Op.substring]: keyword } },
-				{ kategori: { [Op.substring]: keyword } },
-				{ harga: { [Op.substring]: keyword } },
-			],
-		},
-		offset: startIndex,
-		limit: limit,
-	});
 
-	let allProduct = await produkModel.count({
-		where: {
-			[Op.or]: [
-				{ nama_barang: { [Op.substring]: keyword } },
-				{ kategori: { [Op.substring]: keyword } },
-				{ harga: { [Op.substring]: keyword } },
-			],
-		},
-	});
-
-	const totalPages = Math.ceil(allProduct / limit);
-
-	product = await Promise.all(
-		product.map(async (product) => {
-			const namaToko = await getUserById(product.id_publisher);
-			const kota = await getAlamatFromId(product.id_alamat);
-			return {
-				...product.toJSON(),
-				additional_info: [
+	try {
+		let product = await produkModel.findAll({
+			where: {
+				[Op.and]: [
 					{
-						nama_toko: namaToko.nama_toko,
-						kota: kota.kota,
+						[Op.or]: [
+							{ nama_barang: { [Op.substring]: keyword } },
+							{ kategori: { [Op.substring]: keyword } },
+							{ harga: { [Op.substring]: keyword } },
+						],
 					},
+					{ status: "OnSale" },
 				],
-			};
-		})
-	);
+			},
+			offset: startIndex,
+			limit: limit,
+		});
 
-	return response.json({
-		success: true,
-		data: product,
-		pagination: {
-			totalProducts: allProduct,
-			totalPages: totalPages,
-			currentPage: page,
-			productsPerPage: limit,
-		},
-		message: "product with the sufficient filter has been shown",
-	});
+		if (product.length == 0) {
+			return response.json({
+				success: false,
+				status: "no product found",
+			});
+		}
+
+		let allProduct = await produkModel.count({
+			where: {
+				[Op.or]: [
+					{ nama_barang: { [Op.substring]: keyword } },
+					{ kategori: { [Op.substring]: keyword } },
+					{ harga: { [Op.substring]: keyword } },
+				],
+			},
+		});
+
+		const totalPages = Math.ceil(allProduct / limit);
+
+		product = await Promise.all(
+			product.map(async (product) => {
+				const namaToko = await getUserById(product.id_publisher);
+				const kota = await getAlamatFromId(product.id_alamat);
+				return {
+					...product.toJSON(),
+					additional_info: [
+						{
+							nama_toko: namaToko.nama_toko,
+							kota: kota.kota,
+						},
+					],
+				};
+			})
+		);
+
+		return response.json({
+			success: true,
+			data: product,
+			pagination: {
+				totalProducts: allProduct,
+				totalPages: totalPages,
+				currentPage: page,
+				productsPerPage: limit,
+			},
+			message: "product with the sufficient filter has been shown",
+		});
+	} catch (error) {
+		console.log(error);
+		return response.sendStatus(500);
+	}
 };
 
 exports.findProductById = async (request, response) => {
 	try {
 		const productId = request.params.id;
-		const product = await produkModel.findByPk(productId);
+		const product = await produkModel.findOne({
+			where: { id: productId, status: "OnSale" },
+		});
 
 		if (!product) {
 			return response.status(404).json({
@@ -248,6 +271,32 @@ exports.findProductById = async (request, response) => {
 			success: true,
 			data: product,
 			message: "Product found",
+		});
+	} catch (error) {
+		console.error("Error finding product by ID:", error);
+		return response.status(500).json({
+			success: false,
+			message: "Internal server error",
+		});
+	}
+};
+
+exports.RetrieveProductById = async (request, response) => {
+	const productId = request.params.id;
+	try {
+		const product = await produkModel.findOne({
+			where: { id_publisher: request.userData.id_user, id: productId },
+		});
+		if (!product) {
+			return response.status(400).json({
+				success: false,
+				message: "No Product Found",
+			});
+		}
+
+		return response.json({
+			success: true,
+			data: product,
 		});
 	} catch (error) {
 		console.error("Error finding product by ID:", error);
@@ -296,9 +345,10 @@ exports.addProduct = async (request, response) => {
 
 exports.updateProduct = async (request, response) => {
 	upload(request, response, async (error) => {
+		const id = request.params.id;
 		try {
 			const isOwner = await produkModel.findOne({
-				where: { id_publisher: request.userData.id_user },
+				where: { id_publisher: request.userData.id_user, id: id },
 			});
 			if (!isOwner) {
 				return response.status(400).json({
@@ -310,7 +360,6 @@ exports.updateProduct = async (request, response) => {
 			if (error) {
 				return response.json({ message: error });
 			}
-			let id = request.params.id;
 			const oldProduct = await produkModel.findOne({
 				where: { id: id },
 			});

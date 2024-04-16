@@ -199,6 +199,7 @@ exports.checkout = async (request, response) => {
 			await this.recalculateTotalPrice(response, iduser);
 			return response.json({
 				success: false,
+				status: "Product Error",
 				message:
 					"Insufficient Stock, The product with insufficient stock has been removed",
 				insufficientStockProducts: insufficientStockProducts,

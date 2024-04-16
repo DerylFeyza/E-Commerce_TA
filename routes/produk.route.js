@@ -25,6 +25,12 @@ app.get(
 app.get("/", produkController.getAllPaginatedProducts);
 app.get("/cheapest", produkController.getCheapestProduct);
 app.get("/:id", produkController.findProductById);
+app.get(
+	"/data/:id",
+	auth.authVerify,
+	checkRole(["seller", "admin"]),
+	produkController.RetrieveProductById
+);
 app.post("/find", produkController.findProduct);
 app.post(
 	"/add",
