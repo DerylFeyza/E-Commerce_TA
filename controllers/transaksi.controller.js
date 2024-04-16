@@ -67,7 +67,7 @@ exports.productToCart = async (request, response) => {
 			};
 			await cartDetailsModel.create(detailsoforder);
 		}
-		await this.recalculateTotalPrice(response, request.userData.id_user);
+		await this.recalculateTotalPrice(request.userData.id_user);
 		return response.json({
 			success: true,
 			message: "New cart created and product has been added to the cart",
@@ -80,35 +80,28 @@ exports.productToCart = async (request, response) => {
 	}
 };
 
-exports.recalculateTotalPrice = async (response, id_user) => {
-	try {
-		const userCart = await cartModel.findOne({
-			where: { status: "draft", id_user: id_user },
-		});
+exports.recalculateTotalPrice = async (id_user) => {
+	const userCart = await cartModel.findOne({
+		where: { status: "draft", id_user: id_user },
+	});
 
-		const id_keranjang = userCart.id;
-		if (!id_keranjang) {
-			return response.json({
-				success: false,
-				data: cartData,
-				message: "keranjang not found, go shop",
-			});
-		}
-
-		const totalharga = await cartDetailsModel.sum("total", {
-			where: { id_keranjang: id_keranjang },
-		});
-
-		await cartModel.update(
-			{ totalharga: totalharga },
-			{ where: { id: id_keranjang } }
-		);
-	} catch (error) {
+	const id_keranjang = userCart.id;
+	if (!id_keranjang) {
 		return response.json({
 			success: false,
-			message: error.message,
+			data: cartData,
+			message: "keranjang not found, go shop",
 		});
 	}
+
+	const totalharga = await cartDetailsModel.sum("total", {
+		where: { id_keranjang: id_keranjang },
+	});
+
+	await cartModel.update(
+		{ totalharga: totalharga },
+		{ where: { id: id_keranjang } }
+	);
 };
 
 exports.removeProductFromCart = async (request, response) => {
@@ -128,7 +121,7 @@ exports.removeProductFromCart = async (request, response) => {
 				message: "No Product Found",
 			});
 		}
-		await this.recalculateTotalPrice(response, request.userData.id_user);
+		await this.recalculateTotalPrice(request.userData.id_user);
 		return response.json({
 			success: true,
 			message: "Product Has Been Deleted from Cart",
@@ -196,7 +189,7 @@ exports.checkout = async (request, response) => {
 				})
 			);
 
-			await this.recalculateTotalPrice(response, iduser);
+			await this.recalculateTotalPrice(iduser);
 			return response.json({
 				success: false,
 				status: "Product Error",

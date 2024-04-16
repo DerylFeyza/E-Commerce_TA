@@ -19,6 +19,17 @@ exports.getProductDetailsForCart = async (keranjangDetails) => {
 	return details;
 };
 
+exports.checkProductOwnership = async (userId, productId) => {
+	try {
+		const product = await produkModel.findOne({
+			where: { id_publisher: userId, id: productId },
+		});
+		return !!product;
+	} catch (error) {
+		throw error;
+	}
+};
+
 exports.getallProduct = async (request, response) => {
 	let products = await produkModel.findAll();
 	return response.json({
@@ -346,10 +357,9 @@ exports.addProduct = async (request, response) => {
 exports.updateProduct = async (request, response) => {
 	upload(request, response, async (error) => {
 		const id = request.params.id;
+		const idUser = request.userData.id_user;
 		try {
-			const isOwner = await produkModel.findOne({
-				where: { id_publisher: request.userData.id_user, id: id },
-			});
+			const isOwner = await this.checkProductOwnership(idUser, id);
 			if (!isOwner) {
 				return response.status(400).json({
 					success: false,
@@ -407,11 +417,10 @@ exports.updateProduct = async (request, response) => {
 };
 
 exports.deleteProduct = async (request, response) => {
+	const id = request.params.id;
+	const idUser = request.userData.id_user;
 	try {
-		const id = request.params.id;
-		const isOwner = await produkModel.findOne({
-			where: { id_publisher: request.userData.id_user },
-		});
+		const isOwner = await this.checkProductOwnership(idUser, id);
 		if (!isOwner) {
 			return response.status(400).json({
 				success: false,
@@ -433,6 +442,34 @@ exports.deleteProduct = async (request, response) => {
 		return response.json({
 			success: false,
 			message: err.message,
+		});
+	}
+};
+
+exports.restockProduct = async (request, response) => {
+	const id = request.params.id;
+	const idUser = request.userData.id_user;
+	try {
+		const product = await produkModel.findOne({
+			where: { id_publisher: idUser, id: id },
+		});
+		if (!product) {
+			return response.status(400).json({
+				success: false,
+				message: "Unauthorized",
+			});
+		}
+
+		const updatedStock = product.stok + parseInt(request.body.add);
+		await produkModel.update({ stok: updatedStock }, { where: { id: id } });
+		return response.json({
+			success: true,
+			message: "product has been restocked",
+		});
+	} catch (error) {
+		return response.json({
+			success: false,
+			message: error.message,
 		});
 	}
 };

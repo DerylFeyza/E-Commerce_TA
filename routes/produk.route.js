@@ -50,6 +50,12 @@ app.put(
 	checkRole(["seller", "admin"]),
 	produkController.updateProduct
 );
+app.post(
+	"/restock/:id",
+	auth.authVerify,
+	checkRole(["seller", "admin"]),
+	produkController.restockProduct
+);
 app.get("/image/:filename", produkController.getProductImage);
 
 module.exports = app;
