@@ -461,11 +461,21 @@ exports.restockProduct = async (request, response) => {
 		}
 
 		const updatedStock = product.stok + parseInt(request.body.add);
-		await produkModel.update({ stok: updatedStock }, { where: { id: id } });
-		return response.json({
-			success: true,
-			message: "product has been restocked",
-		});
+		if (updatedStock > 0) {
+			await produkModel.update(
+				{ status: "OnSale", stok: updatedStock },
+				{ where: { id: id } }
+			);
+			return response.json({
+				success: true,
+				message: "product has been restocked",
+			});
+		} else {
+			return response.json({
+				success: false,
+				message: "product has not been restocked",
+			});
+		}
 	} catch (error) {
 		return response.json({
 			success: false,
