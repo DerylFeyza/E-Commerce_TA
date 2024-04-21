@@ -7,6 +7,12 @@ const { checkRole } = require("../middleware/checkRole");
 app.post("/login", userController.login);
 app.post("/register", userController.userRegister);
 app.put(
+	"/seller",
+	auth.authVerify,
+	checkRole(["customer"]),
+	userController.userToSeller
+);
+app.put(
 	"/update/:id",
 	auth.authVerify,
 	checkRole(["admin"]),

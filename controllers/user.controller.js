@@ -236,3 +236,29 @@ exports.getUserById = async (id) => {
 		});
 	}
 };
+
+exports.userToSeller = async () => {
+	const idUser = request.userData.id_user;
+	try {
+		const isUser = await userModel.findOne({
+			where: { id: idUser, role: "customer" },
+		});
+		if (!isUser) {
+			return response.status(400).json({
+				success: false,
+				message: "Unauthorized",
+			});
+		}
+
+		await userModel.update({ role: "seller" }, { where: { id: idUser } });
+		return response.json({
+			success: true,
+			message: "Role has been updated",
+		});
+	} catch (error) {
+		return response.json({
+			success: false,
+			message: error.message,
+		});
+	}
+};
