@@ -338,6 +338,7 @@ exports.addProduct = async (request, response) => {
 				harga: request.body.harga,
 				stok: request.body.stok,
 				details: request.body.details,
+				status: request.body.status,
 			};
 
 			await produkModel.create(newProduct);
@@ -391,6 +392,7 @@ exports.updateProduct = async (request, response) => {
 				details: request.body.details
 					? request.body.details
 					: oldProduct.details,
+				status: request.body.status ? request.body.status : oldProduct.status,
 			};
 
 			if (request.file) {

@@ -37,12 +37,7 @@ exports.login = async (request, response) => {
 		};
 
 		tokenPayLoad = JSON.stringify(tokenPayLoad);
-		let token = await jsonwebtoken.sign(tokenPayLoad, SECRET_KEY);
-
-		response.cookie("token", "Bearer " + token, {
-			httpOnly: true,
-			// You can set other cookie options here such as 'maxAge' for expiration
-		});
+		let token = jsonwebtoken.sign(tokenPayLoad, SECRET_KEY);
 
 		return response.status(200).json({
 			message: "Success Login",
@@ -237,8 +232,12 @@ exports.getUserById = async (id) => {
 	}
 };
 
-exports.userToSeller = async () => {
+exports.userToSeller = async (request, response) => {
 	const idUser = request.userData.id_user;
+	const data = {
+		nama_toko: request.body.namatoko,
+		password: request.body.password,
+	};
 	try {
 		const isUser = await userModel.findOne({
 			where: { id: idUser, role: "customer" },
@@ -250,10 +249,38 @@ exports.userToSeller = async () => {
 			});
 		}
 
-		await userModel.update({ role: "seller" }, { where: { id: idUser } });
-		return response.json({
+		const valid = await bcrypt.compare(data.password, isUser.password);
+		if (!valid) {
+			return response.status(400).json({
+				success: false,
+				message: "email or password doesnt match",
+			});
+		}
+
+		await userModel.update(
+			{ role: "seller", nama_toko: data.nama_toko },
+			{ where: { id: idUser } }
+		);
+		let tokenPayLoad = {
+			id_user: isUser.id,
+			email: isUser.email,
+			username: isUser.username,
+			role: "seller",
+		};
+
+		tokenPayLoad = JSON.stringify(tokenPayLoad);
+		let token = jsonwebtoken.sign(tokenPayLoad, SECRET_KEY);
+
+		return response.status(200).json({
+			message: "Role Updated and success Login",
 			success: true,
-			message: "Role has been updated",
+			data: {
+				token: token,
+				id_user: isUser.id,
+				email: isUser.email,
+				username: isUser.username,
+				role: "seller",
+			},
 		});
 	} catch (error) {
 		return response.json({
