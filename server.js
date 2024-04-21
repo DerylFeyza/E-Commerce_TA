@@ -6,7 +6,7 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 
 const corsOptions = {
-	origin: "http://frontendecommerce.s3-website-us-east-1.amazonaws.com/",
+	origin: "http://frontendecommerce.s3-website-us-east-1.amazonaws.com",
 	credentials: true,
 };
 
