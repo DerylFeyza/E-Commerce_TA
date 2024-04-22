@@ -1,23 +1,23 @@
 {
 	"development": {
-		"username": "admin",
-		"password": "password",
+		"username": "root",
+		"password": null,
 		"database": "ecommerce",
-		"host": "ecommerce.ctm0cyswa4xc.us-east-1.rds.amazonaws.com",
+		"host": "127.0.0.1",
 		"dialect": "mysql"
 	},
 	"test": {
-		"username": "admin",
-		"password": "password",
+		"username": "root",
+		"password": null,
 		"database": "ecommerce",
-		"host": "ecommerce.ctm0cyswa4xc.us-east-1.rds.amazonaws.com",
+		"host": "127.0.0.1",
 		"dialect": "mysql"
 	},
 	"production": {
-		"username": "admin",
-		"password": "password",
+		"username": "root",
+		"password": null,
 		"database": "ecommerce",
-		"host": "ecommerce.ctm0cyswa4xc.us-east-1.rds.amazonaws.com",
+		"host": "127.0.0.1",
 		"dialect": "mysql"
 	}
 }
