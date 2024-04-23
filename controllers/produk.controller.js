@@ -278,9 +278,19 @@ exports.findProductById = async (request, response) => {
 			});
 		}
 
+		const namaToko = await getUserById(product.id_publisher);
+		const kota = await getAlamatFromId(product.id_alamat);
+
 		return response.json({
 			success: true,
 			data: product,
+			additional_info: [
+				{
+					nama_toko: namaToko.nama_toko,
+					kota: kota.kota,
+				},
+			],
+
 			message: "Product found",
 		});
 	} catch (error) {

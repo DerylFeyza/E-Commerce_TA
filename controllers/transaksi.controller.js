@@ -4,6 +4,21 @@ const cartDetailsModel = require("../models/index").detailkeranjang;
 
 exports.productToCart = async (request, response) => {
 	try {
+		const isPublisher = await produkModel.findOne({
+			where: {
+				id_publisher: request.userData.id_user,
+				id: request.body.id_produk,
+			},
+		});
+
+		if (isPublisher) {
+			return response.json({
+				success: false,
+				status: "Publisher",
+				message: "You cant buy you own products",
+			});
+		}
+
 		let cartData = {
 			id_user: request.userData.id_user,
 			status: "draft",

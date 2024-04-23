@@ -16,14 +16,15 @@ exports.login = async (request, response) => {
 		});
 
 		if (findUser == null) {
-			return response.status(400).json({
+			return response.json({
+				success: false,
 				message: "email or password doesnt match",
 			});
 		}
 
 		const valid = await bcrypt.compare(params.password, findUser.password);
 		if (!valid) {
-			return response.status(400).json({
+			return response.json({
 				success: false,
 				message: "email or password doesnt match",
 			});
@@ -41,7 +42,7 @@ exports.login = async (request, response) => {
 
 		return response.status(200).json({
 			message: "Success Login",
-			status: true,
+			success: true,
 			data: {
 				token: token,
 				id_user: findUser.id,
@@ -52,7 +53,7 @@ exports.login = async (request, response) => {
 		});
 	} catch (error) {
 		console.log(error);
-		return response.status(400).json({
+		return response.status(500).json({
 			message: error,
 		});
 	}
