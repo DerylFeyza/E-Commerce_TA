@@ -1,6 +1,8 @@
 const produkModel = require("../models/index").produk;
 const cartModel = require("../models/index").keranjanguser;
 const cartDetailsModel = require("../models/index").detailkeranjang;
+const receiptModel = require("../models/index").receipt;
+const receiptDetailsModel = require("../models/index").detailreceipt;
 
 exports.productToCart = async (request, response) => {
 	try {
@@ -21,10 +23,10 @@ exports.productToCart = async (request, response) => {
 
 		let cartData = {
 			id_user: request.userData.id_user,
-			status: "draft",
 		};
+
 		const checkExistingCart = await cartModel.findOne({
-			where: { id_user: cartData.id_user, status: "draft" },
+			where: { id_user: cartData.id_user },
 		});
 
 		const productData = await produkModel.findOne({
@@ -85,7 +87,7 @@ exports.productToCart = async (request, response) => {
 		await this.recalculateTotalPrice(request.userData.id_user);
 		return response.json({
 			success: true,
-			message: "New cart created and product has been added to the cart",
+			message: "product has been added to the cart",
 		});
 	} catch (error) {
 		return response.json({
@@ -97,7 +99,7 @@ exports.productToCart = async (request, response) => {
 
 exports.recalculateTotalPrice = async (id_user) => {
 	const userCart = await cartModel.findOne({
-		where: { status: "draft", id_user: id_user },
+		where: { id_user: id_user },
 	});
 
 	const id_keranjang = userCart.id;
@@ -123,7 +125,7 @@ exports.removeProductFromCart = async (request, response) => {
 	const id = request.params.id;
 	try {
 		const userCart = await cartModel.findOne({
-			where: { status: "draft", id_user: request.userData.id_user },
+			where: { id_user: request.userData.id_user },
 		});
 
 		const isDeleted = await cartDetailsModel.destroy({
@@ -154,7 +156,7 @@ exports.checkout = async (request, response) => {
 	const iduser = request.userData.id_user;
 	try {
 		const cartUser = await cartModel.findOne({
-			where: { id_user: iduser, status: "draft" },
+			where: { id_user: iduser },
 		});
 
 		const idCart = cartUser.id;
@@ -171,6 +173,7 @@ exports.checkout = async (request, response) => {
 		});
 
 		let insufficientStockProducts = [];
+		let receiptDetails = [];
 
 		await Promise.all(
 			allProductOnCart.map(async (cartProduct) => {
@@ -186,11 +189,27 @@ exports.checkout = async (request, response) => {
 						{ stok: newStock, status: "SoldOut" },
 						{ where: { id: cartProduct.id_produk } }
 					);
+					const receiptDetailData = {
+						id_seller: existingProduct.id_publisher,
+						namaproduk: existingProduct.nama_barang,
+						hargaproduk: existingProduct.harga,
+						quantity: cartProduct.quantity,
+						total: cartProduct.total,
+					};
+					receiptDetails.push(receiptDetailData);
 				} else {
 					await produkModel.update(
 						{ stok: newStock },
 						{ where: { id: cartProduct.id_produk } }
 					);
+					const receiptDetailData = {
+						id_seller: existingProduct.id_publisher,
+						namaproduk: existingProduct.nama_barang,
+						hargaproduk: existingProduct.harga,
+						quantity: cartProduct.quantity,
+						total: cartProduct.total,
+					};
+					receiptDetails.push(receiptDetailData);
 				}
 			})
 		);
@@ -214,17 +233,27 @@ exports.checkout = async (request, response) => {
 			});
 		}
 
-		await cartModel.update(
-			{ status: "dibayar" },
-			{ where: { id_user: iduser, status: "draft" } }
-		);
+		const newReceipt = {
+			id_buyer: iduser,
+			totalharga: cartUser.totalharga,
+			fromcity: request.body.fromcity,
+			fromaddress: request.body.fromaddress,
+			tocity: request.body.tocity,
+			toaddress: request.body.toaddress,
+		};
 
-		await cartDetailsModel.update(
-			{ checkedout: "true" },
-			{
-				where: { id_keranjang: idCart },
-			}
-		);
+		const receiptResult = await receiptModel.create(newReceipt);
+
+		const id_receipt = receiptResult.id;
+
+		for (let i = 0; i < receiptDetails.length; i++) {
+			receiptDetails[i].id_receipt = id_receipt;
+		}
+
+		await receiptDetailsModel.bulkCreate(receiptDetails);
+
+		await cartDetailsModel.destroy({ where: { id_keranjang: idCart } });
+		await cartModel.destroy({ where: { id_user: iduser } });
 
 		return response.json({
 			success: true,

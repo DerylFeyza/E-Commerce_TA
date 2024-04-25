@@ -19,9 +19,6 @@ module.exports = {
 			totalharga: {
 				type: Sequelize.INTEGER,
 			},
-			status: {
-				type: Sequelize.ENUM("dibayar", "draft"),
-			},
 			createdAt: {
 				allowNull: false,
 				type: Sequelize.DATE,

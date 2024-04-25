@@ -17,9 +17,6 @@ module.exports = (sequelize, DataTypes) => {
 		{
 			id_user: DataTypes.INTEGER,
 			totalharga: DataTypes.INTEGER,
-			status: {
-				type: DataTypes.ENUM("dibayar", "draft"),
-			},
 		},
 		{
 			sequelize,

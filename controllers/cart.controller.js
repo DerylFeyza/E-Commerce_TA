@@ -5,7 +5,7 @@ const { getProductDetailsForCart } = require("./produk.controller");
 exports.getCartOnDraft = async (request, response) => {
 	try {
 		const userCart = await cartModel.findOne({
-			where: { status: "draft", id_user: request.userData.id_user },
+			where: { id_user: request.userData.id_user },
 		});
 		if (!userCart) {
 			return response.json({
