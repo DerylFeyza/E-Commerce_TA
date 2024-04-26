@@ -1,38 +1,35 @@
-const cartModel = require("../models/index").keranjanguser;
-const cartDetailsModel = require("../models/index").detailkeranjang;
+const receiptModel = require("../models/index").receipt;
+const receiptDetailsModel = require("../models/index").detailreceipt;
 const userModel = require("../models/index").user;
 
 exports.getUserReceipt = async (request, response) => {
 	const iduser = request.userData.id_user;
-	const idTransaksi = request.params.id;
+	const idReceipt = request.params.id;
 	try {
-		const keranjang = await cartModel.findOne({
-			where: { id: idTransaksi, status: "dibayar", id_user: iduser },
+		const receipt = await receiptModel.findOne({
+			where: { id: idReceipt, id_buyer: iduser },
 		});
 
-		if (!keranjang) {
+		if (!receipt) {
 			return response.status(401).json({
 				success: false,
 				message: `Transaction Not Found`,
 			});
 		}
 
-		const keranjangDetails = await cartDetailsModel.findAll({
-			where: { id_keranjang: idTransaksi },
+		const receiptDetails = await receiptDetailsModel.findAll({
+			where: { id_receipt: idReceipt },
 		});
 
 		const userData = await userModel.findByPk(iduser, {
 			attributes: ["username"],
 		});
 
-		const details = await getProductDetailsForCart(keranjangDetails);
-
 		return response.json({
 			success: true,
 			userData: userData,
-			cartInfo: keranjang,
-			data: keranjangDetails,
-			products: details,
+			receipt: receipt,
+			data: receiptDetails,
 			message: "Payment Receipt has been successfully loaded",
 		});
 	} catch (error) {
@@ -45,12 +42,12 @@ exports.getUserReceipt = async (request, response) => {
 
 exports.getTransactionHistory = async (request, response) => {
 	try {
-		const userCart = await cartModel.findAll({
-			attributes: ["id", "totalharga", "updatedAt"],
-			where: { status: "dibayar", id_user: request.userData.id_user },
+		const userPurchaseHistory = await receiptModel.findAll({
+			attributes: ["id", "totalharga", "createdAt"],
+			where: { id_buyer: request.userData.id_user },
 		});
 
-		if (!userCart) {
+		if (!userPurchaseHistory) {
 			return response.json({
 				success: false,
 				message: "user have not made a transaction",
@@ -59,12 +56,43 @@ exports.getTransactionHistory = async (request, response) => {
 
 		return response.json({
 			success: true,
-			data: userCart,
+			data: userPurchaseHistory,
 			message: "Transaction History has been successfully fetched",
 		});
 	} catch (error) {
 		console.error("Error fetching cart", error);
 		return response.status(500).json({
+			success: false,
+			message: "Internal server error",
+		});
+	}
+};
+
+exports.getRecentPurchase = async (request, response) => {
+	const iduser = request.userData.id_user;
+
+	try {
+		const recentPurchases = await receiptDetailsModel.findAll({
+			attributes: ["namaproduk", "hargaproduk", "quantity", "total"],
+			where: {
+				id_seller: iduser,
+			},
+			order: [["createdAt", "DESC"]],
+			limit: 6,
+		});
+
+		if (recentPurchases.length == 0) {
+			return response.json({
+				success: false,
+				message: "no recent purchase",
+			});
+		}
+		return response.json({
+			success: true,
+			message: "Recent sales have been loaded",
+		});
+	} catch (error) {
+		return response.json({
 			success: false,
 			message: "Internal server error",
 		});

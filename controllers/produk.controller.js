@@ -1,7 +1,6 @@
 const produkModel = require("../models/index").produk;
 const Op = require("sequelize").Op;
 const upload = require("./upload-foto").single("gambar_barang");
-const cartDetailsModel = require("../models/index").detailkeranjang;
 const { getAlamatFromId } = require("./alamat.controller");
 const { getUserById } = require("./user.controller");
 const path = require("path");
@@ -49,44 +48,6 @@ exports.getallMerchantProduct = async (request, response) => {
 			success: true,
 			data: merchantProducts,
 			message: "all products has been loaded",
-		});
-	} catch (error) {
-		return response.status(500).json({
-			success: false,
-			message: "Internal server error",
-		});
-	}
-};
-
-exports.getRecentPurchase = async (request, response) => {
-	const iduser = request.userData.id_user;
-	try {
-		let merchantProducts = await produkModel.findAll({
-			where: { id_publisher: iduser },
-		});
-		const soldProductsIds = merchantProducts.map((product) => product.id);
-		const recentPurchases = await cartDetailsModel.findAll({
-			where: {
-				id_produk: soldProductsIds,
-				checkedout: "true",
-			},
-			order: [["updatedAt", "DESC"]],
-			limit: 6,
-		});
-		if (!recentPurchases) {
-			return response.json({
-				success: true,
-				purchase: "no recent purchase",
-				message: "Recent purchases have been loaded",
-			});
-		}
-
-		const soldProducts = await this.getProductDetailsForCart(recentPurchases);
-		return response.json({
-			success: true,
-			purchases: recentPurchases,
-			details: soldProducts,
-			message: "Recent purchases have been loaded",
 		});
 	} catch (error) {
 		return response.status(500).json({

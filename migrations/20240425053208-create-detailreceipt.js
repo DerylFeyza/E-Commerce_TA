@@ -35,6 +35,18 @@ module.exports = {
 			total: {
 				type: Sequelize.INTEGER,
 			},
+			fromcity: {
+				type: Sequelize.STRING,
+			},
+			fromaddress: {
+				type: Sequelize.STRING,
+			},
+			tocity: {
+				type: Sequelize.STRING,
+			},
+			toaddress: {
+				type: Sequelize.STRING,
+			},
 			createdAt: {
 				allowNull: false,
 				type: Sequelize.DATE,

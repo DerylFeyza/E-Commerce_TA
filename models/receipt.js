@@ -15,10 +15,6 @@ module.exports = (sequelize, DataTypes) => {
 		{
 			id_buyer: DataTypes.INTEGER,
 			totalharga: DataTypes.INTEGER,
-			fromcity: DataTypes.STRING,
-			fromaddress: DataTypes.STRING,
-			tocity: DataTypes.STRING,
-			toaddress: DataTypes.STRING,
 		},
 		{
 			sequelize,
