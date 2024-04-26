@@ -90,6 +90,7 @@ exports.getRecentPurchase = async (request, response) => {
 		return response.json({
 			success: true,
 			message: "Recent sales have been loaded",
+			purchases: recentPurchases,
 		});
 	} catch (error) {
 		return response.json({
