@@ -1,6 +1,7 @@
 const produkModel = require("../models/index").produk;
 const cartModel = require("../models/index").keranjanguser;
 const cartDetailsModel = require("../models/index").detailkeranjang;
+const userModel = require("../models/index").user;
 const receiptModel = require("../models/index").receipt;
 const receiptDetailsModel = require("../models/index").detailreceipt;
 
@@ -155,6 +156,7 @@ exports.removeProductFromCart = async (request, response) => {
 exports.checkout = async (request, response) => {
 	const iduser = request.userData.id_user;
 	try {
+		const user = await userModel.findByPk(iduser);
 		const cartUser = await cartModel.findOne({
 			where: { id_user: iduser },
 		});
@@ -165,6 +167,14 @@ exports.checkout = async (request, response) => {
 			return response.json({
 				success: false,
 				message: "cart not found",
+			});
+		}
+
+		const updatedUserSaldo = user.saldo - cartUser.totalharga;
+		if (updatedUserSaldo < 0) {
+			return response.json({
+				success: false,
+				status: "Insufficient Balance",
 			});
 		}
 
@@ -181,6 +191,18 @@ exports.checkout = async (request, response) => {
 					cartProduct.id_produk
 				);
 
+				const productSeller = await userModel.findByPk(
+					existingProduct.id_publisher
+				);
+
+				const receiptDetailData = {
+					id_seller: existingProduct.id_publisher,
+					namaproduk: existingProduct.nama_barang,
+					hargaproduk: existingProduct.harga,
+					quantity: cartProduct.quantity,
+					total: cartProduct.total,
+				};
+
 				const newStock = existingProduct.stok - cartProduct.quantity;
 				if (newStock < 0 || existingProduct.status !== "OnSale") {
 					insufficientStockProducts.push(cartProduct);
@@ -189,27 +211,25 @@ exports.checkout = async (request, response) => {
 						{ stok: newStock, status: "SoldOut" },
 						{ where: { id: cartProduct.id_produk } }
 					);
-					const receiptDetailData = {
-						id_seller: existingProduct.id_publisher,
-						namaproduk: existingProduct.nama_barang,
-						hargaproduk: existingProduct.harga,
-						quantity: cartProduct.quantity,
-						total: cartProduct.total,
-					};
 					receiptDetails.push(receiptDetailData);
+					await userModel.update(
+						{
+							saldo: productSeller.saldo + cartProduct.total,
+						},
+						{ where: { id: existingProduct.id_publisher } }
+					);
 				} else {
 					await produkModel.update(
 						{ stok: newStock },
 						{ where: { id: cartProduct.id_produk } }
 					);
-					const receiptDetailData = {
-						id_seller: existingProduct.id_publisher,
-						namaproduk: existingProduct.nama_barang,
-						hargaproduk: existingProduct.harga,
-						quantity: cartProduct.quantity,
-						total: cartProduct.total,
-					};
 					receiptDetails.push(receiptDetailData);
+					await userModel.update(
+						{
+							saldo: productSeller.saldo + cartProduct.total,
+						},
+						{ where: { id: existingProduct.id_publisher } }
+					);
 				}
 			})
 		);
@@ -232,6 +252,11 @@ exports.checkout = async (request, response) => {
 				insufficientStockProducts: insufficientStockProducts,
 			});
 		}
+
+		await userModel.update(
+			{ saldo: updatedUserSaldo },
+			{ where: { id: iduser } }
+		);
 
 		const newReceipt = {
 			id_buyer: iduser,

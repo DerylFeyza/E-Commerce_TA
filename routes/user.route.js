@@ -26,6 +26,7 @@ app.post(
 	checkRole(["admin"]),
 	userController.findUser
 );
+app.get("/info", auth.authVerify, userController.getUserInformation);
 app.get("/", auth.authVerify, checkRole(["admin"]), userController.getAlluser);
 app.delete(
 	"/delete/:id",

@@ -233,6 +233,24 @@ exports.getUserById = async (id) => {
 	}
 };
 
+exports.getUserInformation = async (request, response) => {
+	const idUser = request.userData.id_user;
+	try {
+		const user = await userModel.findByPk(idUser, {
+			attributes: { exclude: ["password"] },
+		});
+		return response.json({
+			success: true,
+			data: user,
+		});
+	} catch (error) {
+		return response.json({
+			success: false,
+			message: error.message,
+		});
+	}
+};
+
 exports.userToSeller = async (request, response) => {
 	const idUser = request.userData.id_user;
 	const data = {

@@ -45,6 +45,7 @@ exports.getTransactionHistory = async (request, response) => {
 		const userPurchaseHistory = await receiptModel.findAll({
 			attributes: ["id", "totalharga", "createdAt"],
 			where: { id_buyer: request.userData.id_user },
+			order: [["createdAt", "DESC"]],
 		});
 
 		if (!userPurchaseHistory) {
