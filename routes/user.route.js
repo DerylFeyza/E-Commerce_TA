@@ -19,6 +19,7 @@ app.put(
 	userController.updateUser
 );
 app.put("/update", auth.authVerify, userController.userChangeDetails);
+app.put("/recharge", auth.authVerify, userController.userTopUp);
 app.post("/add", auth.authVerify, checkRole(["admin"]), userController.addUser);
 app.post(
 	"/find",

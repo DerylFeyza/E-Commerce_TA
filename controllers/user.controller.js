@@ -308,3 +308,26 @@ exports.userToSeller = async (request, response) => {
 		});
 	}
 };
+
+exports.userTopUp = async (request, response) => {
+	const idUser = request.userData.id_user;
+	try {
+		const user = await userModel.findByPk(idUser, {
+			attributes: { exclude: ["password"] },
+		});
+		const updatedUserSaldo = user.saldo + parseInt(request.body.value);
+		await userModel.update(
+			{ saldo: updatedUserSaldo },
+			{ where: { id: idUser } }
+		);
+		return response.json({
+			success: true,
+			message: "Account has been successfully recharged",
+		});
+	} catch (error) {
+		return response.json({
+			success: false,
+			message: error.message,
+		});
+	}
+};
