@@ -25,9 +25,20 @@ exports.getUserReceipt = async (request, response) => {
 			attributes: ["username"],
 		});
 
+		const userDetailsPromises = receiptDetails.map(async (receiptDetail) => {
+			const userData = await userModel.findOne({
+				where: { id: receiptDetail.id_seller },
+				attributes: ["nama_toko"],
+			});
+			return userData;
+		});
+
+		const sellerDetails = await Promise.all(userDetailsPromises);
+
 		return response.json({
 			success: true,
 			userData: userData,
+			shopData: sellerDetails,
 			receipt: receipt,
 			data: receiptDetails,
 			message: "Payment Receipt has been successfully loaded",
@@ -36,6 +47,46 @@ exports.getUserReceipt = async (request, response) => {
 		return response.status(401).json({
 			success: false,
 			message: `Something went wrong`,
+		});
+	}
+};
+
+exports.getRecentSalesDetail = async (request, response) => {
+	const iduser = request.userData.id_user;
+	const idReceiptDetail = request.params.id;
+
+	try {
+		const receiptDetail = await receiptDetailsModel.findOne({
+			where: { id: idReceiptDetail, id_seller: iduser },
+		});
+
+		if (!receiptDetail) {
+			return response.status(401).json({
+				success: false,
+				message: `Transaction Not Found`,
+			});
+		}
+
+		const receiptParent = await receiptModel.findOne({
+			where: { id: receiptDetail.id_receipt },
+		});
+
+		console.log(receiptParent.id_buyer);
+
+		const userData = await userModel.findByPk(receiptParent.id_buyer, {
+			attributes: ["username"],
+		});
+
+		return response.json({
+			success: true,
+			userData: userData,
+			data: receiptDetail,
+			message: "Sale Detail has been successfully loaded",
+		});
+	} catch (error) {
+		return response.status(401).json({
+			success: false,
+			message: error,
 		});
 	}
 };
@@ -74,12 +125,12 @@ exports.getRecentPurchase = async (request, response) => {
 
 	try {
 		const recentPurchases = await receiptDetailsModel.findAll({
-			attributes: ["namaproduk", "hargaproduk", "quantity", "total"],
+			attributes: ["id", "namaproduk", "hargaproduk", "quantity", "total"],
 			where: {
 				id_seller: iduser,
 			},
 			order: [["createdAt", "DESC"]],
-			limit: 6,
+			limit: 100,
 		});
 
 		if (recentPurchases.length == 0) {

@@ -12,5 +12,11 @@ app.get(
 	checkRole(["seller", "admin"]),
 	receiptController.getRecentPurchase
 );
+app.get(
+	"/merchant/sale/:id",
+	auth.authVerify,
+	checkRole(["seller", "admin"]),
+	receiptController.getRecentSalesDetail
+);
 
 module.exports = app;
