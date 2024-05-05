@@ -70,9 +70,6 @@ exports.getRecentSalesDetail = async (request, response) => {
 		const receiptParent = await receiptModel.findOne({
 			where: { id: receiptDetail.id_receipt },
 		});
-
-		console.log(receiptParent.id_buyer);
-
 		const userData = await userModel.findByPk(receiptParent.id_buyer, {
 			attributes: ["username"],
 		});
