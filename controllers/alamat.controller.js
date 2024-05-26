@@ -1,4 +1,5 @@
 const alamatModel = require("../models/index").alamat;
+const produkModel = require("../models/index").produk;
 const Op = require("sequelize").Op;
 
 exports.getAlamatFromId = async (id) => {
@@ -133,7 +134,12 @@ exports.deleteAddress = async (request, response) => {
 				message: "Unauthorized",
 			});
 		}
+		await produkModel.update(
+			{ id_alamat: null, status: "MissingInformation" },
+			{ where: { id_alamat: id } }
+		);
 		await alamatModel.destroy({ where: { id: id } });
+
 		return response.json({
 			success: true,
 			message: "address has been deleted",
