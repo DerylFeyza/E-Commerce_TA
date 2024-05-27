@@ -1,8 +1,10 @@
 const produkModel = require("../models/index").produk;
+const cartDetailsModel = require("../models/index").detailkeranjang;
 const Op = require("sequelize").Op;
 const upload = require("./upload-foto").single("gambar_barang");
 const { getAlamatFromId } = require("./alamat.controller");
 const { getUserById } = require("./user.controller");
+const { recalculateTotalPrice } = require("./transaksi.controller");
 const path = require("path");
 const fs = require("fs");
 
@@ -406,7 +408,21 @@ exports.deleteProduct = async (request, response) => {
 		if (fs.existsSync(pathPhoto)) {
 			fs.unlink(pathPhoto, (error) => console.log(error));
 		}
+
+		await cartDetailsModel.update(
+			{
+				id_produk: null,
+				quantity: 0,
+				total: 0,
+			},
+			{
+				where: { id_produk: id },
+				returning: true,
+			}
+		);
+
 		await produkModel.destroy({ where: { id: id } });
+
 		return response.json({
 			success: true,
 			message: "product has been deleted",

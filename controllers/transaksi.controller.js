@@ -185,54 +185,46 @@ exports.checkout = async (request, response) => {
 		let insufficientStockProducts = [];
 		let receiptDetails = [];
 
-		await Promise.all(
-			allProductOnCart.map(async (cartProduct) => {
-				const existingProduct = await produkModel.findByPk(
-					cartProduct.id_produk
-				);
+		for (const cartProduct of allProductOnCart) {
+			if (cartProduct.id_produk === null) {
+				insufficientStockProducts.push(cartProduct);
+				console.log("bruh");
+				continue;
+			}
 
-				const productSeller = await userModel.findByPk(
-					existingProduct.id_publisher
-				);
+			const existingProduct = await produkModel.findByPk(cartProduct.id_produk);
+			const productSeller = await userModel.findByPk(
+				existingProduct.id_publisher
+			);
 
-				const receiptDetailData = {
-					id_seller: existingProduct.id_publisher,
-					namaproduk: existingProduct.nama_barang,
-					hargaproduk: existingProduct.harga,
-					quantity: cartProduct.quantity,
-					total: cartProduct.total,
-				};
+			const receiptDetailData = {
+				id_seller: existingProduct.id_publisher,
+				namaproduk: existingProduct.nama_barang,
+				hargaproduk: existingProduct.harga,
+				quantity: cartProduct.quantity,
+				total: cartProduct.total,
+			};
 
-				const newStock = existingProduct.stok - cartProduct.quantity;
-				if (newStock < 0 || existingProduct.status !== "OnSale") {
-					insufficientStockProducts.push(cartProduct);
-				} else if (newStock == 0) {
-					await produkModel.update(
-						{ stok: newStock, status: "SoldOut" },
-						{ where: { id: cartProduct.id_produk } }
-					);
-					receiptDetails.push(receiptDetailData);
-					await userModel.update(
-						{
-							saldo: productSeller.saldo + cartProduct.total,
-						},
-						{ where: { id: existingProduct.id_publisher } }
-					);
-				} else {
-					await produkModel.update(
-						{ stok: newStock },
-						{ where: { id: cartProduct.id_produk } }
-					);
-					receiptDetails.push(receiptDetailData);
-					await userModel.update(
-						{
-							saldo: productSeller.saldo + cartProduct.total,
-						},
-						{ where: { id: existingProduct.id_publisher } }
-					);
+			const newStock = existingProduct.stok - cartProduct.quantity;
+			if (newStock < 0 || existingProduct.status !== "OnSale") {
+				insufficientStockProducts.push(cartProduct);
+			} else {
+				let updateData = { stok: newStock };
+				if (newStock === 0) {
+					updateData.status = "SoldOut";
 				}
-			})
-		);
+				await produkModel.update(updateData, {
+					where: { id: cartProduct.id_produk },
+				});
+				receiptDetails.push(receiptDetailData);
+				await userModel.update(
+					{
+						saldo: productSeller.saldo + cartProduct.total,
+					},
+					{ where: { id: existingProduct.id_publisher } }
+				);
+			}
+		}
 
 		if (insufficientStockProducts.length > 0) {
 			await Promise.all(
@@ -246,7 +238,7 @@ exports.checkout = async (request, response) => {
 			await this.recalculateTotalPrice(iduser);
 			return response.json({
 				success: false,
-				status: "Product Error",
+				status: "NoStock",
 				message:
 					"Insufficient Stock, The product with insufficient stock has been removed",
 				insufficientStockProducts: insufficientStockProducts,
